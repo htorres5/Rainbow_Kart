@@ -8,6 +8,9 @@ class Play extends Phaser.Scene {
     }
 
     create() {
+        // reset paramaters
+        this.obstacleSpeed = 450;
+        this.obstacleSpeedMax = 1000;
 
         // white borders
         this.add.rectangle(0, 0, game.config.width, borderUISize, 0xFFFFFF).setOrigin(0, 0);
@@ -36,16 +39,39 @@ class Play extends Phaser.Scene {
         console.log(this.lanes[1].x);
         
         // add train
+        this.train = this.physics.add.sprite(this.lanes[this.currentLane].x, this.train_y, 'train').setOrigin(0.5);
         this.isMoving = false;
         this.moveSpeed = 400; // pixels / sec
-        this.train = this.physics.add.sprite(this.lanes[this.currentLane].x, this.train_y, 'train').setOrigin(0.5);
+        this.train.setImmovable();
+        this.train.setDepth(1);
+        this.train.destroyed = false;
 
         // keys
         keyLEFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
         keyRIGHT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
+
+        // * OBSTACLES * //
+        this.obstacleGroup = this.add.group({
+            runChildUpdate: true
+        });
+
+        // delay to spawn obstacles at start
+        this.time.delayedCall(2500, () => { 
+            this.addObstacle(); 
+        });
+
+    }
+
+    addObstacle() {
+        let speedVariance = Phaser.Math.Between(0,50);
+        let lane = Phaser.Math.Between(0,2);
+        let obstacle = new Obstacle(this, this.obstacleSpeed - speedVariance, this.lanes[lane].x);
+        this.obstacleGroup.add(obstacle);
     }
 
     update() {
+
+        // * LANE MOVEMENT * //
 
         if(Phaser.Input.Keyboard.JustDown(keyLEFT) && this.currentLane > 0 && this.isMoving == false) {
             this.isMoving = true;
