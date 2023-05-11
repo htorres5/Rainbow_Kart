@@ -1,12 +1,16 @@
-class Train extends Phaser.GameObjects.Sprite {
+class Train extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, texture, frame) {
         super(scene, x, y, texture, frame);
     
         // add object to existing scene
         scene.add.existing(this);
-        this.initialSpeed = 5;
+        scene.physics.add.existing(this);
+        this.initialSpeed = 60;
+        this.lanes = [(halfway - (64 + borderPadding)), halfway, (halfway + (64+ borderPadding))]
+        console.log(this.lanes[2])
         this.moveSpeed = this.initialSpeed; 
-        this.y = y;  // pixels per frame
+        this.lane = 1;
+        this.y = y;
     }
 
     speedup(multiplier) {
@@ -15,11 +19,17 @@ class Train extends Phaser.GameObjects.Sprite {
   
     update() {
         // left/right movement
-        if(keyLEFT.isDown && this.x >= borderUISize + this.width) {
-            this.x -= this.moveSpeed;
-        } else if (keyRIGHT.isDown && this.x <= game.config.width - borderUISize - this.width) {
-            this.x += this.moveSpeed;
-        }
+        // if(Phaser.Input.Keyboard.JustDown(keyLEFT) && this.lane > 0) {
+        //     this.lane -= 1;
+        //     this.xCoord = this.lanes[this.lane];
+        //     this.moveTo(this, 300, 280, this.moveSpeed)
+        //     console.log(this.lane)
+        // } else if (Phaser.Input.Keyboard.JustDown(keyRIGHT) && this.lane < 2) {
+        //     this.lane += 1;
+        //     this.xCoord = this.lanes[this.lane];
+        //     this.scene.physics.arcade.moveTo(this, this.xCoord, this.y, this.moveSpeed)
+        //     console.log(this.lane)
+        // }
     }
   
     //  // reset rocket to "ground"
