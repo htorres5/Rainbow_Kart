@@ -11,8 +11,9 @@ class Play extends Phaser.Scene {
 
     create() {
         // reset paramaters
-        this.obstacleSpeed = 180;
-        this.obstacleSpeedMax = 1000;
+        this.scrollSpeed = 3;
+        this.maxScrollSpeed = 17;
+        this.obstacleSpeed = 60 * this.scrollSpeed;
 
         // add rainbow
         this.rainbow = this.add.tileSprite(centerX - 160, 0, 320, 832, 'rainbow').setOrigin(0, 0);
@@ -80,14 +81,14 @@ class Play extends Phaser.Scene {
     }
 
     update() {
-        // // * RAINBOW * //
+        // // * RAINBOW * //a
         // this.rainbow.tilePositionY -= 4;
 
         // * LANE MOVEMENT * //
         if (!this.kart.destroyed) {
 
             // * RAINBOW * //
-            this.rainbow.tilePositionY -= 3;
+            this.rainbow.tilePositionY -= this.scrollSpeed;
 
             if(Phaser.Input.Keyboard.JustDown(keyLEFT) && this.currentLane > 0 && this.isMoving == false) {
                 this.isMoving = true;
