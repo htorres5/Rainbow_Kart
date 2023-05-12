@@ -1,7 +1,7 @@
-class Obstacle extends Phaser.Physics.Arcade.Sprite {
+class Banana extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, velocity, lane) {
         // call Phaser Physics Sprite constructor
-        super(scene, lane, -obstacleHeight, 'obstacle'); 
+        super(scene, lane, -obstacleHeight, 'banana'); 
 
         this.parentScene = scene;
         this.velocity = velocity;

@@ -4,8 +4,14 @@ class Play extends Phaser.Scene {
     }
 
     preload() {
+        // * Protaganist
         this.load.image('kart', 'assets/sprites/kart.png');
+
+        // * Obstacles
         this.load.image('banana', 'assets/sprites/banana.png');
+        this.load.image('obstacle', 'assets/sprites/obstacle.png');
+
+        // * BG
         this.load.image('rainbow', 'assets/sprites/rainbow.png')
     }
 
@@ -13,7 +19,7 @@ class Play extends Phaser.Scene {
         // reset paramaters
         this.scrollSpeed = 3;
         this.maxScrollSpeed = 17;
-        this.obstacleSpeed = 60 * this.scrollSpeed;
+        this.itemSpeed = 60 * this.scrollSpeed;
 
         // add rainbow
         this.rainbow = this.add.tileSprite(centerX - 160, 0, 320, 832, 'rainbow').setOrigin(0, 0);
@@ -58,31 +64,36 @@ class Play extends Phaser.Scene {
 
         // * OBSTACLES * //
 
-        this.banana
-        this.obstacles = []
-
-
         this.obstacleGroup = this.add.group({
+            runChildUpdate: true
+        });
+
+        this.bananaGroup = this.add.group({
             runChildUpdate: true
         });
 
         // delay to spawn obstacles at start
         this.time.delayedCall(2500, () => { 
-            this.addObstacle(); 
+            this.addItem(); 
         });
 
     }
 
-    addObstacle() {
-        //let speedVariance = Phaser.Math.Between(0,50);
+    addItem() {
         let lane = Phaser.Math.Between(0,2);
-        let obstacle = new Obstacle(this, this.obstacleSpeed, this.lanes[lane].x);
-        this.obstacleGroup.add(obstacle);
+        let probability = Phaser.Math.Between(0,100);
+        let item = undefined;
+        if((probability >= 0) && (probability <= 50)) {
+            item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x);
+            this.obstacleGroup.add(item);
+        }
+        if((probability >= 51) && (probability <= 100)) {
+            item = new Banana(this, this.itemSpeed, this.lanes[lane].x);
+            this.bananaGroup.add(item);
+        }
     }
 
     update() {
-        // // * RAINBOW * //a
-        // this.rainbow.tilePositionY -= 4;
 
         // * LANE MOVEMENT * //
         if (!this.kart.destroyed) {
@@ -110,6 +121,8 @@ class Play extends Phaser.Scene {
 
             // check for collisions
             this.physics.world.collide(this.kart, this.obstacleGroup, this.kartCollision, null, this);
+
+            this.physics.world.collide(this.kart, this.bananaGroup, this.kartCollision, null, this);
         
 
             const tolerance = 10;
@@ -136,6 +149,9 @@ class Play extends Phaser.Scene {
         this.obstacleGroup.children.each(function(obstacle) {
             obstacle.setVelocityY(0);
           }, this);
+        this.bananaGroup.children.each(function(obstacle) {
+        obstacle.setVelocityY(0);
+        }, this);
 
         this.kart.destroy();
     }
