@@ -73,36 +73,54 @@ class Play extends Phaser.Scene {
     update() {
 
         // * LANE MOVEMENT * //
+        if (!this.train.destroyed) {
+            if(Phaser.Input.Keyboard.JustDown(keyLEFT) && this.currentLane > 0 && this.isMoving == false) {
+                this.isMoving = true;
+                this.currentLane -= 1;
+                this.train_x = this.lanes[this.currentLane].x;
+                console.log(this.train_x)
+                this.physics.moveTo(this.train, this.train_x , this.train_y, this.moveSpeed)
+                console.log(this.physics.moveTo(this.train, this.train_x , this.train_y, this.moveSpeed));
+                console.log(this.currentLane)
+            } else if (Phaser.Input.Keyboard.JustDown(keyRIGHT) && this.currentLane < 2 && this.isMoving == false) {
+                this.isMoving = true;
+                this.currentLane += 1;
+                console.log(this.currentLane)
+                this.train_x = this.lanes[this.currentLane].x;
+                console.log(this.train_x)
+                this.physics.moveTo(this.train, this.train_x , this.train_y, this.moveSpeed)
+                console.log(this.physics.moveTo(this.train, this.train_x , this.train_y, this.moveSpeed));
+            }
 
-        if(Phaser.Input.Keyboard.JustDown(keyLEFT) && this.currentLane > 0 && this.isMoving == false) {
-            this.isMoving = true;
-            this.currentLane -= 1;
-            this.train_x = this.lanes[this.currentLane].x;
-            console.log(this.train_x)
-            this.physics.moveTo(this.train, this.train_x , this.train_y, this.moveSpeed)
-            console.log(this.physics.moveTo(this.train, this.train_x , this.train_y, this.moveSpeed));
-            console.log(this.currentLane)
-        } else if (Phaser.Input.Keyboard.JustDown(keyRIGHT) && this.currentLane < 2 && this.isMoving == false) {
-            this.isMoving = true;
-            this.currentLane += 1;
-            console.log(this.currentLane)
-            this.train_x = this.lanes[this.currentLane].x;
-            console.log(this.train_x)
-            this.physics.moveTo(this.train, this.train_x , this.train_y, this.moveSpeed)
-            console.log(this.physics.moveTo(this.train, this.train_x , this.train_y, this.moveSpeed));
-        }
+            // check for collisions
+            this.physics.world.collide(this.train, this.obstacleGroup, this.trainCollision, null, this);
+        
 
-        const tolerance = 10;
+            const tolerance = 10;
 
-        const distance = Phaser.Math.Distance.BetweenPoints(this.train, this.lanes[this.currentLane]);
+            const distance = Phaser.Math.Distance.BetweenPoints(this.train, this.lanes[this.currentLane]);
 
-        if (this.train.body.speed > 0) {
+            console.log("called update()")
+            if(this.train.destroyed == false) {
+                if (this.train.body.speed > 0) {
 
-            if (distance < tolerance) {
-                this.train.body.reset(this.train_x, this.train_y);
-                this.isMoving = false;
+                    if (distance < tolerance) {
+                        this.train.body.reset(this.train_x, this.train_y);
+                        this.isMoving = false;
+                    }
+                }
             }
         }
-      
+    }
+
+    trainCollision() {
+        this.train.destroyed = true;
+        console.log("called trainCollision()")
+        this.cameras.main.shake(500, 0.0075);
+        this.obstacleGroup.children.each(function(obstacle) {
+            obstacle.setVelocityY(0);
+          }, this);
+
+        this.train.destroy();
     }
 }
