@@ -4,6 +4,7 @@ class Obstacle extends Phaser.Physics.Arcade.Sprite {
         super(scene, lane, -obstacleHeight, 'banana'); 
 
         this.parentScene = scene;
+        this.velocity = velocity;
     
         // add object to existing scene
         this.parentScene.add.existing(this);
@@ -17,7 +18,12 @@ class Obstacle extends Phaser.Physics.Arcade.Sprite {
     //     this.moveSpeed = this.initialSpeed*multiplier;
     //  }
   
-    update() {
+    update(time, delta) {
+        if(!this.parentScene.kart.destroyed) {
+            let speedCorrection = (1000/60)/delta;
+            this.setVelocityY(this.velocity*speedCorrection);
+        }
+
         // add new obstacle when existing obstacle hits center y
         if(this.newObstacle && this.y > centerY) {
             // (recursively) call parent scene method from this context

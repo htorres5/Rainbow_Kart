@@ -6,12 +6,16 @@ class Play extends Phaser.Scene {
     preload() {
         this.load.image('kart', 'assets/sprites/kart.png');
         this.load.image('banana', 'assets/sprites/banana.png');
+        this.load.image('rainbow', 'assets/sprites/rainbow.png')
     }
 
     create() {
         // reset paramaters
-        this.obstacleSpeed = 450;
+        this.obstacleSpeed = 180;
         this.obstacleSpeedMax = 1000;
+
+        // add rainbow
+        this.rainbow = this.add.tileSprite(centerX - 160, 0, 320, 832, 'rainbow').setOrigin(0, 0);
 
         // white borders
         this.add.rectangle(0, 0, game.config.width, borderUISize, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
@@ -69,16 +73,22 @@ class Play extends Phaser.Scene {
     }
 
     addObstacle() {
-        let speedVariance = Phaser.Math.Between(0,50);
+        //let speedVariance = Phaser.Math.Between(0,50);
         let lane = Phaser.Math.Between(0,2);
-        let obstacle = new Obstacle(this, this.obstacleSpeed - speedVariance, this.lanes[lane].x);
+        let obstacle = new Obstacle(this, this.obstacleSpeed, this.lanes[lane].x);
         this.obstacleGroup.add(obstacle);
     }
 
     update() {
+        // // * RAINBOW * //
+        // this.rainbow.tilePositionY -= 4;
 
         // * LANE MOVEMENT * //
         if (!this.kart.destroyed) {
+
+            // * RAINBOW * //
+            this.rainbow.tilePositionY -= 3;
+
             if(Phaser.Input.Keyboard.JustDown(keyLEFT) && this.currentLane > 0 && this.isMoving == false) {
                 this.isMoving = true;
                 this.currentLane -= 1;
