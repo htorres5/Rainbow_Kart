@@ -22,7 +22,7 @@ class Play extends Phaser.Scene {
         this.itemSpeed = 60 * this.scrollSpeed;
 
         // add rainbow
-        this.rainbow = this.add.tileSprite(centerX - 160, 0, 320, 832, 'rainbow').setOrigin(0, 0);
+        this.rainbow = this.add.tileSprite(centerX - 160, 0, 320, 854, 'rainbow').setOrigin(0, 0);
 
         // white borders
         this.add.rectangle(0, 0, game.config.width, borderUISize, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
@@ -30,10 +30,10 @@ class Play extends Phaser.Scene {
         this.add.rectangle(0, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
         this.add.rectangle(game.config.width - borderUISize, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
 
-        // * kart * // 
-
         // Y Coordinate For kart
         this.kart_y = game.config.height - borderUISize*2 - borderPadding*2;
+
+        // * lanes * // 
 
         // Lane X Coordinates
         this.x_of_lane0 = centerX - (64);
@@ -49,6 +49,8 @@ class Play extends Phaser.Scene {
         
         console.log(this.lanes);
         console.log(this.lanes[1].x);
+
+        // * kart * //
         
         // add kart
         this.kart = this.physics.add.sprite(this.lanes[this.currentLane].x, this.kart_y, 'kart').setOrigin(0.5);
@@ -56,6 +58,9 @@ class Play extends Phaser.Scene {
         this.moveSpeed = 400; // pixels / sec
         this.kart.setImmovable();
         this.kart.setDepth(1);
+        this.kart.health = 5;
+        this.kart.hit = false;
+        this.kart.invincible = true;
         this.kart.destroyed = false;
 
         // keys
@@ -63,6 +68,8 @@ class Play extends Phaser.Scene {
         keyRIGHT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
 
         // * OBSTACLES * //
+
+        this.colliderActivated = true;
 
         this.obstacleGroup = this.add.group({
             runChildUpdate: true
@@ -84,11 +91,11 @@ class Play extends Phaser.Scene {
         let probability = Phaser.Math.Between(0,100);
         let item = undefined;
         if((probability >= 0) && (probability <= 50)) {
-            item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x);
+            item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'obstacle');
             this.obstacleGroup.add(item);
         }
         if((probability >= 51) && (probability <= 100)) {
-            item = new Banana(this, this.itemSpeed, this.lanes[lane].x);
+            item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'banana');
             this.bananaGroup.add(item);
         }
     }
@@ -105,24 +112,24 @@ class Play extends Phaser.Scene {
                 this.isMoving = true;
                 this.currentLane -= 1;
                 this.kart_x = this.lanes[this.currentLane].x;
-                console.log(this.kart_x)
+                // console.log(this.kart_x)
                 this.physics.moveTo(this.kart, this.kart_x , this.kart_y, this.moveSpeed)
-                console.log(this.physics.moveTo(this.kart, this.kart_x , this.kart_y, this.moveSpeed));
-                console.log(this.currentLane)
+                // console.log(this.physics.moveTo(this.kart, this.kart_x , this.kart_y, this.moveSpeed));
+                // console.log(this.currentLane)
             } else if (Phaser.Input.Keyboard.JustDown(keyRIGHT) && this.currentLane < 2 && this.isMoving == false) {
                 this.isMoving = true;
                 this.currentLane += 1;
-                console.log(this.currentLane)
+                // console.log(this.currentLane)
                 this.kart_x = this.lanes[this.currentLane].x;
-                console.log(this.kart_x)
+                // console.log(this.kart_x)
                 this.physics.moveTo(this.kart, this.kart_x , this.kart_y, this.moveSpeed)
-                console.log(this.physics.moveTo(this.kart, this.kart_x , this.kart_y, this.moveSpeed));
+                // console.log(this.physics.moveTo(this.kart, this.kart_x , this.kart_y, this.moveSpeed));
             }
 
             // check for collisions
-            this.physics.world.collide(this.kart, this.obstacleGroup, this.kartCollision, null, this);
+            this.physics.world.collide(this.kart, this.obstacleGroup, this.destroyKart, null, this);
 
-            this.physics.world.collide(this.kart, this.bananaGroup, this.kartCollision, null, this);
+            this.physics.world.collide(this.kart, this.bananaGroup, this.bananaCollision, null, this);
         
 
             const tolerance = 10;
@@ -139,20 +146,45 @@ class Play extends Phaser.Scene {
                     }
                 }
             }
+
+            // * Spins Kart if Hit by Banana
+            if(this.kart.hit == true) {
+                this.kart.angle += 6;
+                this.time.delayedCall(300, () => { 
+                    this.kart.hit = false;
+                    this.kart.angle = 0;
+                });
+            }
         }
     }
 
-    kartCollision() {
+    destroyKart() {
         this.kart.destroyed = true;
-        console.log("called kartCollision()")
         this.cameras.main.shake(500, 0.0075);
+
+        // * stop obstacles
         this.obstacleGroup.children.each(function(obstacle) {
             obstacle.setVelocityY(0);
           }, this);
         this.bananaGroup.children.each(function(obstacle) {
         obstacle.setVelocityY(0);
         }, this);
+        
 
+        // TODO: Add Sound Effect for Death
+        // TODO: add explosion animation
         this.kart.destroy();
+    }
+
+    bananaCollision(kart, banana) {
+        console.log("called bananaCollision()")
+        banana.destroy();
+        this.kart.health -= 1;
+        this.kart.hit = true;
+        if(this.kart.health == 0) {
+            this.destroyKart();
+        }
+        console.log(this.kart.health)
+        
     }
 }

@@ -19,8 +19,8 @@ let game = new Phaser.Game(config);
 // reserve keyboard vars
 let keyF, keyR, keyLEFT, keyRIGHT;
 
-let borderUISize = game.config.height / 20;
-let borderPadding = borderUISize / 2;
+let borderUISize = game.config.height / 100;
+let borderPadding = 40;
 let centerX = game.config.width / 2;
 let centerY = game.config.height / 2;
 const obstacleHeight = 64;
