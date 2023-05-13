@@ -16,6 +16,10 @@ class Play extends Phaser.Scene {
 
         // * BG
         this.load.image('rainbow', 'assets/sprites/rainbow.png')
+
+        // * BGM
+        this.load.audio('unknown_cities', 'assets/music/PerituneMaterial_Unknown_Cities.mp3');
+
     }
 
     create() {
@@ -26,6 +30,10 @@ class Play extends Phaser.Scene {
 
         // add rainbow
         this.rainbow = this.add.tileSprite(centerX - 160, 0, 320, 854, 'rainbow').setOrigin(0, 0);
+
+        // play music
+        this.music = this.sound.add('unknown_cities', {volume: 0.25, loop: true});
+        this.music.play();
 
         // white borders
         this.add.rectangle(0, 0, game.config.width, borderUISize, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
@@ -100,19 +108,37 @@ class Play extends Phaser.Scene {
             this.addItem(); 
         });
 
+        // * DIFFICULTY TIMER * //
+
+        this.difficultyTimer = this.time.addEvent({
+            delay: 10000,
+            callback: this.speedup,
+            callbackScope: this,
+            loop: true
+        })
+
     }
 
     addItem() {
         let lane = Phaser.Math.Between(0,2);
         let probability = Phaser.Math.Between(0,100);
         let item = undefined;
-        if((probability >= 0) && (probability <= 50)) {
+        if((probability >= 0) && (probability <= 10)) {
             item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'obstacle');
             this.obstacleGroup.add(item);
         }
-        if((probability >= 51) && (probability <= 100)) {
+        if((probability >= 11) && (probability <= 100)) {
             item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'banana');
             this.bananaGroup.add(item);
+        }
+    }
+
+    speedup() {
+        if(this.scrollSpeed <= this.maxScrollSpeed) {
+            this.scrollSpeed += .5
+            this.itemSpeed = 60 * this.scrollSpeed;
+            this.music.rate += 0.001; 
+            console.log(this.itemSpeed)
         }
     }
 
@@ -203,7 +229,7 @@ class Play extends Phaser.Scene {
         this.cameras.main.shake(450, 0.001);
         this.kart.health -= 1;
         this.kart.hit = true;
-        
+
         if(this.kart.health == 0) {
             this.destroyKart();
         }
