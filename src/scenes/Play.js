@@ -277,6 +277,7 @@ class Play extends Phaser.Scene {
 
     bombCollision(kart, bomb) {
         bomb.destroy();
+        this.hearts.clear(true, true)
         this.destroyKart();
         this.hearts = [];
     }
