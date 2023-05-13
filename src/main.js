@@ -1,3 +1,5 @@
+// * https://pixabay.com/sound-effects/search/explosion/
+
 console.log("uwu")
 
 let config = {
@@ -8,7 +10,7 @@ let config = {
     physics: {
         default: 'arcade',
         arcade: {
-          debug: false,
+          debug: true,
           gravity: { y: 0 }
         }
       }

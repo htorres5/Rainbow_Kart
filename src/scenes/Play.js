@@ -10,15 +10,23 @@ class Play extends Phaser.Scene {
         // * Obstacles
         this.load.image('banana', 'assets/sprites/banana.png');
         this.load.image('obstacle', 'assets/sprites/obstacle.png');
+        this.load.spritesheet('bomb', './assets/sprites/sheets/bomb.png', {frameWidth: 32, frameHeight: 32, startFrame: 0, endFrame: 5});
 
         // * Effects
-        this.load.atlas('explosion', 'assets/sprites/sheets/explosion.png','assets/sprites/sheets/explosion.json')
+        this.load.atlas('explosion', 'assets/sprites/sheets/explosion.png','assets/sprites/sheets/explosion.json');
 
         // * BG
-        this.load.image('rainbow', 'assets/sprites/rainbow.png')
+        this.load.image('rainbow', 'assets/sprites/rainbow.png');
+
+        // * UI
+        this.load.image('heart', 'assets/sprites/heart.png');
 
         // * BGM
         this.load.audio('unknown_cities', 'assets/music/PerituneMaterial_Unknown_Cities.mp3');
+
+        // * SFX
+        this.load.audio('sfx_slip', 'assets/sounds/slip.mp3');
+        this.load.audio('sfx_explosion', 'assets/sounds/explosion.mp3');
 
     }
 
@@ -41,7 +49,7 @@ class Play extends Phaser.Scene {
         this.add.rectangle(0, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
         this.add.rectangle(game.config.width - borderUISize, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
 
-        // * effect animations * //
+        // * effects * //
 
         // Explosion Animation
         this.anims.create({
@@ -91,9 +99,39 @@ class Play extends Phaser.Scene {
         keyLEFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         keyRIGHT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
 
+        // * health UI * //
+        this.hearts = this.add.group({
+            classType: Phaser.GameObjects.Image
+        });
+
+        this.hearts.createMultiple({
+            key: 'heart',
+            setOrigin: {
+                x: 1,
+                y: 1,
+            },
+            setXY: {
+                x: game.config.width - borderUISize*2,
+                y: game.config.height - borderUISize,
+                stepY: -64
+            },
+            quantity: this.kart.health
+        })
+
+        // for(let i = 0; i < this.kart.health; i++) {
+        //     this.heart = this.add.sprite(game.config.width - borderUISize*2, game.config.height - borderUISize - (i*64), 'heart').setOrigin(1);
+        //     this.hearts.push(this.heart);
+        // }
+
         // * OBSTACLES * //
 
-        this.colliderActivated = true;
+        // bomb animation
+        this.anims.create({
+            key: 'fuse',
+            frames: this.anims.generateFrameNumbers('bomb', { start: 0, end: 5, first: 0}),
+            frameRate: 12,
+            repeat: -1
+        });
 
         this.obstacleGroup = this.add.group({
             runChildUpdate: true
@@ -124,7 +162,10 @@ class Play extends Phaser.Scene {
         let probability = Phaser.Math.Between(0,100);
         let item = undefined;
         if((probability >= 0) && (probability <= 10)) {
-            item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'obstacle');
+            item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'bomb');
+            item.setScale(2);
+            item.body.setSize(8,8,true)
+            item.anims.play('fuse');
             this.obstacleGroup.add(item);
         }
         if((probability >= 11) && (probability <= 100)) {
@@ -169,7 +210,7 @@ class Play extends Phaser.Scene {
             }
 
             // check for collisions
-            this.physics.world.overlap(this.kart, this.obstacleGroup, this.destroyKart, null, this);
+            this.physics.world.overlap(this.kart, this.obstacleGroup, this.bombCollision, null, this);
 
             this.physics.world.collide(this.kart, this.bananaGroup, this.bananaCollision, null, this);
         
@@ -197,6 +238,15 @@ class Play extends Phaser.Scene {
                     this.kart.angle = 0;
                 });
             }
+
+            if(this.kart.destroyed) {
+                this.tweens.add({
+                    targets: this.music,
+                    volume: 0.05,
+                    duration: 500
+                })
+                //this.music.stop();
+            }
         }
     }
 
@@ -215,23 +265,41 @@ class Play extends Phaser.Scene {
         obstacle.setVelocityY(0);
         }, this);
         
+        // play sound
+        this.sound.play('sfx_explosion', { volume: 0.1 })
 
-        // TODO: Add Sound Effect for Death
+        // play explosion animation
         let boom = this.kart.play('explosion', true);
         boom.on('animationcomplete', () => {
             this.kart.destroy();
         })
     }
 
+    bombCollision(kart, bomb) {
+        bomb.destroy();
+        this.destroyKart();
+        this.hearts = [];
+    }
+
     bananaCollision(kart, banana) {
         console.log("called bananaCollision()")
+        // destory the banana
         banana.destroy();
-        this.cameras.main.shake(450, 0.001);
+
+        // shake for dramatic effect *
+        this.cameras.main.shake(450, 0.005);
+
+        // remove health
         this.kart.health -= 1;
         this.kart.hit = true;
 
-        if(this.kart.health == 0) {
+        this.hearts.remove(this.hearts.getLast(true), true);
+
+
+        if(this.kart.health <= 0) {
             this.destroyKart();
+        } else {
+            this.sound.play('sfx_slip', { volume: 0.5 })
         }
         console.log(this.kart.health)
     }
