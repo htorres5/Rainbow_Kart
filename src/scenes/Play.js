@@ -90,10 +90,12 @@ class Play extends Phaser.Scene {
         this.moveSpeed = 400; // pixels / sec
         this.kart.setImmovable();
         this.kart.setDepth(1);
-        this.kart.health = 5;
         this.kart.hit = false;
         this.kart.invincible = true;
         this.kart.destroyed = false;
+
+        this.kart.health = 8;
+        this.kart.maxHealth = 8;
 
         // keys
         keyLEFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
@@ -104,7 +106,7 @@ class Play extends Phaser.Scene {
             classType: Phaser.GameObjects.Image
         });
 
-        this.hearts.createMultiple({
+        this.heartsConfig = {
             key: 'heart',
             setOrigin: {
                 x: 1,
@@ -112,16 +114,12 @@ class Play extends Phaser.Scene {
             },
             setXY: {
                 x: game.config.width - borderUISize*2,
-                y: game.config.height - borderUISize,
+                y: game.config.height/2 + 192,
                 stepY: -64
             },
             quantity: this.kart.health
-        })
-
-        // for(let i = 0; i < this.kart.health; i++) {
-        //     this.heart = this.add.sprite(game.config.width - borderUISize*2, game.config.height - borderUISize - (i*64), 'heart').setOrigin(1);
-        //     this.hearts.push(this.heart);
-        // }
+        }
+        this.hearts.createMultiple(this.heartsConfig);
 
         // * OBSTACLES * //
 
@@ -140,6 +138,10 @@ class Play extends Phaser.Scene {
         this.bananaGroup = this.add.group({
             runChildUpdate: true
         });
+
+        this.heartGroup = this.add.group({
+            runChildUpdate: true
+        })
 
         // delay to spawn obstacles at start
         this.time.delayedCall(2500, () => { 
@@ -161,14 +163,16 @@ class Play extends Phaser.Scene {
         let lane = Phaser.Math.Between(0,2);
         let probability = Phaser.Math.Between(0,100);
         let item = undefined;
-        if((probability >= 0) && (probability <= 10)) {
+        if((probability >= 0) && (probability <= 5)) {
+            item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'heart');
+            this.heartGroup.add(item);
+        } else if((probability >= 6) && (probability <= 10)) {
             item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'bomb');
             item.setScale(2);
             item.body.setSize(8,8,true)
             item.anims.play('fuse');
             this.obstacleGroup.add(item);
-        }
-        if((probability >= 11) && (probability <= 100)) {
+        } else {
             item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'banana');
             this.bananaGroup.add(item);
         }
@@ -213,6 +217,8 @@ class Play extends Phaser.Scene {
             this.physics.world.overlap(this.kart, this.obstacleGroup, this.bombCollision, null, this);
 
             this.physics.world.collide(this.kart, this.bananaGroup, this.bananaCollision, null, this);
+
+            this.physics.world.collide(this.kart, this.heartGroup, this.heartCollision, null, this);
         
 
             const tolerance = 10;
@@ -273,6 +279,26 @@ class Play extends Phaser.Scene {
         boom.on('animationcomplete', () => {
             this.kart.destroy();
         })
+    }
+
+    heartCollision(kart, heart) {
+        heart.destroy();
+        if (this.kart.health <= this.kart.maxHealth) {
+            this.kart.health += 1;
+            let lastHeart = this.hearts.getLast(true);
+            console.log(lastHeart.y)
+            this.hearts.createFromConfig({
+                key: 'heart',
+                setOrigin: {
+                    x: 1,
+                    y: 1,
+                },
+                setXY: {
+                    x: game.config.width - borderUISize*2,
+                    y: lastHeart.y - 64,
+                },
+            })
+        }
     }
 
     bombCollision(kart, bomb) {
