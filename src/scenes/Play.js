@@ -11,6 +11,9 @@ class Play extends Phaser.Scene {
         this.load.image('banana', 'assets/sprites/banana.png');
         this.load.image('obstacle', 'assets/sprites/obstacle.png');
 
+        // * Effects
+        this.load.atlas('explosion', 'assets/sprites/sheets/explosion.png','assets/sprites/sheets/explosion.json')
+
         // * BG
         this.load.image('rainbow', 'assets/sprites/rainbow.png')
     }
@@ -29,6 +32,19 @@ class Play extends Phaser.Scene {
         this.add.rectangle(0, game.config.height - borderUISize, game.config.width, borderUISize, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
         this.add.rectangle(0, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
         this.add.rectangle(game.config.width - borderUISize, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
+
+        // * effect animations * //
+
+        // Explosion Animation
+        this.anims.create({
+            key: 'explosion',
+            frames: this.anims.generateFrameNames('explosion', {
+                prefix: 'explosion',
+                start: 0,
+                end: 15
+            }),
+            frameRate: 24,
+        })
 
         // Y Coordinate For kart
         this.kart_y = game.config.height - borderUISize*2 - borderPadding*2;
@@ -127,7 +143,7 @@ class Play extends Phaser.Scene {
             }
 
             // check for collisions
-            this.physics.world.collide(this.kart, this.obstacleGroup, this.destroyKart, null, this);
+            this.physics.world.overlap(this.kart, this.obstacleGroup, this.destroyKart, null, this);
 
             this.physics.world.collide(this.kart, this.bananaGroup, this.bananaCollision, null, this);
         
@@ -162,29 +178,35 @@ class Play extends Phaser.Scene {
         this.kart.destroyed = true;
         this.cameras.main.shake(500, 0.0075);
 
+        // * Make it so kart stops moving horizontally
+        this.kart.body.reset(this.kart.body.x + this.kart.width/2, this.kart.body.y + this.kart.height/2);
+
         // * stop obstacles
         this.obstacleGroup.children.each(function(obstacle) {
             obstacle.setVelocityY(0);
-          }, this);
+        }, this);
         this.bananaGroup.children.each(function(obstacle) {
         obstacle.setVelocityY(0);
         }, this);
         
 
         // TODO: Add Sound Effect for Death
-        // TODO: add explosion animation
-        this.kart.destroy();
+        let boom = this.kart.play('explosion', true);
+        boom.on('animationcomplete', () => {
+            this.kart.destroy();
+        })
     }
 
     bananaCollision(kart, banana) {
         console.log("called bananaCollision()")
         banana.destroy();
+        this.cameras.main.shake(450, 0.001);
         this.kart.health -= 1;
         this.kart.hit = true;
+        
         if(this.kart.health == 0) {
             this.destroyKart();
         }
         console.log(this.kart.health)
-        
     }
 }
