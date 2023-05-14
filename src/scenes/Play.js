@@ -419,6 +419,18 @@ class Play extends Phaser.Scene {
                     volume: 0,
                     duration: 2500
                 })
+
+                // * go to GameOver Scene
+                this.time.delayedCall(2500, () => {
+                    this.cameras.main.fadeOut(1000, 0, 0, 0)
+                    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, (cam, effect) => {
+                        this.scene.start('gameOverScene', {
+                            score: this.score,
+                            multiplier: this.multiplier,
+                            speed: this.itemSpeed
+                        });
+                    })
+                })
             }
         }
     }
@@ -509,14 +521,17 @@ class Play extends Phaser.Scene {
     }
 
     bombCollision(kart, bomb) {
-        bomb.destroy();
         console.log(this.kart.invincible)
         if(!this.kart.invincible && this.hasStar == false) {
+            bomb.destroy();
             this.hearts.clear(true, true)
             this.destroyKart();
             this.isHealthMax = false;
         } else {
-            this.sound.play('hit', {volume: 0.25});
+            bomb.setDepth(3);
+            // play sound
+            this.sound.play('sfx_explosion', { volume: 0.1 })
+            bomb.play('explosion', true)
         }
     }
 
@@ -541,20 +556,20 @@ class Play extends Phaser.Scene {
                 this.destroyKart();
             } else {
                 this.sound.play('sfx_slip', { volume: 0.5 })
+                this.tweens.add({
+                    targets: this.kart,
+                    alpha: 0,
+                    ease: 'Cubic.easeOut',  
+                    duration: 300,
+                    loop: 3,
+                    yoyo: true,
+                    onComplete: () => { 
+                            console.log('complete')
+                            this.kart.invincible = false; 
+                    }
+                })
             }
 
-            this.tweens.add({
-                targets: this.kart,
-                alpha: 0,
-                ease: 'Cubic.easeOut',  
-                duration: 300,
-                loop: 3,
-                yoyo: true,
-                onComplete: () => { 
-                        console.log('complete')
-                        this.kart.invincible = false; 
-                }
-            })
 
         } else {
             this.sound.play('hit', {volume: 0.25});

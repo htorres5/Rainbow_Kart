@@ -159,6 +159,8 @@ class Tutorial extends Phaser.Scene {
 
        // * Score * //
 
+       this.score = 0;
+
        this.headerTextConfig = {
            fontFamily: 'Pixel_NES',
            fontSize: '30px',
@@ -246,7 +248,7 @@ class Tutorial extends Phaser.Scene {
 
       // * Show them what a Heart does
       this.headerTextConfig.color = '#434ASF'
-      this.heartInfo = this.add.text(centerX, centerY - 198, 'Use Hearts\n to Heal', this.headerTextConfig).setAlpha(0).setDepth(2).setOrigin(0.5);
+      this.heartInfo = this.add.text(centerX, centerY - 198, 'Use Hearts\nto Heal', this.headerTextConfig).setAlpha(0).setDepth(2).setOrigin(0.5);
 
       this.time.delayedCall(13000, () => { 
          this.tweens.add({
@@ -291,7 +293,7 @@ class Tutorial extends Phaser.Scene {
 
 
       // * oppenheimer
-      this.bombInfo = this.add.text(centerX, centerY - 198, 'Bomb =\n BOOM', this.headerTextConfig).setAlpha(0).setDepth(2).setOrigin(0.5);
+      this.bombInfo = this.add.text(centerX, centerY - 198, 'Bomb =\n One Shot', this.headerTextConfig).setAlpha(0).setDepth(2).setOrigin(0.5);
       this.time.delayedCall(24000, () => { 
          this.oppenheimer = this.time.addEvent({
             delay: 3000,
@@ -483,6 +485,18 @@ class Tutorial extends Phaser.Scene {
                      duration: 300,
                   })
                })
+
+                // * go to GameOver Scene
+                this.time.delayedCall(5000, () => {
+                  this.cameras.main.fadeOut(1000, 0, 0, 0)
+                  this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, (cam, effect) => {
+                      this.scene.start('gameOverScene', {
+                          score: this.score,
+                          multiplier: this.multiplier,
+                          speed: this.itemSpeed
+                      });
+                  })
+              })
            }
        }
    }
@@ -573,15 +587,18 @@ class Tutorial extends Phaser.Scene {
    }
 
    bombCollision(kart, bomb) {
-       bomb.destroy();
-       console.log(this.kart.invincible)
-       if(!this.kart.invincible && this.hasStar == false) {
-           this.hearts.clear(true, true)
-           this.destroyKart();
-           this.isHealthMax = false;
-       } else {
-           this.sound.play('hit', {volume: 0.25});
-       }
+        console.log(this.kart.invincible)
+        if(!this.kart.invincible && this.hasStar == false) {
+            bomb.destroy();
+            this.hearts.clear(true, true)
+            this.destroyKart();
+            this.isHealthMax = false;
+        } else {
+            bomb.setDepth(3);
+            // play sound
+            this.sound.play('sfx_explosion', { volume: 0.1 })
+            bomb.play('explosion', true)
+        }
    }
 
    bananaCollision(kart, banana) {
