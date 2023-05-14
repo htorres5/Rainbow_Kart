@@ -226,5 +226,15 @@ class GameOver extends Phaser.Scene {
             })
         }
 
+        if (Phaser.Input.Keyboard.JustDown(keyC) && this.keyPressed == false) {
+            this.keyPressed = true;
+            this.scene.launch('creditsScene', {
+                lastScene: 'gameOverScene'
+            });
+            this.scene.setVisible(false, 'gameOverScene')
+            this.scene.pause('gameOverScene');
+            this.keyPressed = false;
+        }
+
     }
 }

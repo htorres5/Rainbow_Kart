@@ -19,6 +19,6 @@ https://peritune.com/blog/2021/04/13/battle_fun/
 
 SFX -> 
 Me
-https://pixabay.com/sound-effects/
+https://pixabay.com/sound-effects/explosion-01-6225/
 https://freesound.org/people/LittleRobotSoundFactory/packs/16681/
 https://www.youtube.com/watch?v=s5kc8xBMkXI

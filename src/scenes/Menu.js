@@ -18,6 +18,7 @@ class Menu extends Phaser.Scene {
     }
     create ()
     {     
+
         // * Play Music
         this.titleMusic = this.sound.add('chill', {volume: 0.25, loop: true});
         this.titleMusic.play();
@@ -138,6 +139,15 @@ class Menu extends Phaser.Scene {
             })
         }
 
+        if (Phaser.Input.Keyboard.JustDown(keyC) && this.keyPressed == false) {
+            this.keyPressed = true;
+            this.scene.launch('creditsScene', {
+                lastScene: 'menuScene'
+            });
+            this.scene.setVisible(false, 'menuScene')
+            this.scene.pause('menuScene');
+            this.keyPressed = false;
+        }
     }
 
     // create() {
