@@ -98,6 +98,7 @@ class GameOver extends Phaser.Scene {
 
         // * KEYS* //
 
+        this.keyPressed = false;
         keySPACE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
         keyC = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
@@ -153,7 +154,8 @@ class GameOver extends Phaser.Scene {
         }
 
         // * MENU
-        if (Phaser.Input.Keyboard.JustDown(keySPACE)) {
+        if (Phaser.Input.Keyboard.JustDown(keySPACE) && this.keyPressed == false) {
+            this.keyPressed = true;
             this.tweens.add({
                 targets: this.titleMusic,
                 volume: 0,
@@ -166,7 +168,8 @@ class GameOver extends Phaser.Scene {
             })
         }
 
-        if (Phaser.Input.Keyboard.JustDown(keyF)) {
+        if (Phaser.Input.Keyboard.JustDown(keyF) && this.keyPressed == false) {
+            this.keyPressed = true;
             this.tweens.add({
                 targets: this.titleMusic,
                 volume: 0,

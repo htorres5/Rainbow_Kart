@@ -14,13 +14,16 @@ class Play extends Phaser.Scene {
         this.load.image('heart', 'assets/sprites/heart.png');
         this.load.spritesheet('star', './assets/sprites/sheets/star.png', {frameWidth: 64, frameHeight: 64, startFrame: 0, endFrame: 5});
 
+        // * Controls
+       this.load.image('movement', 'assets/sprites/controls/movement.png')
+
         // * Effects
         this.load.atlas('explosion', 'assets/sprites/sheets/explosion.png','assets/sprites/sheets/explosion.json');
 
         // * BG
         this.load.image('rainbow', 'assets/sprites/rainbow.png');
+        this.load.image('starfield', 'assets/sprites/starfield.png')
     
-
         // * BGM
         this.load.audio('unknown_cities', 'assets/music/PerituneMaterial_Unknown_Cities.mp3');
         this.load.audio('fun', 'assets/music/PerituneMaterial_Battle_Fun.mp3')
@@ -39,7 +42,10 @@ class Play extends Phaser.Scene {
         this.cameras.main.fadeIn(1000, 0, 0, 0)
 
         // add rainbow
+
+        this.starfield = this.add.tileSprite(borderUISize, 0, 480, 854, 'starfield').setOrigin(0, 0);
         this.rainbow = this.add.tileSprite(centerX - 160, 0, 320, 854, 'rainbow').setOrigin(0, 0);
+
 
         // play music
         this.music = this.sound.add('unknown_cities', {volume: 0.25, loop: true});
@@ -237,8 +243,32 @@ class Play extends Phaser.Scene {
         })
 
         // delay to spawn obstacles at start
-        this.time.delayedCall(2500, () => { 
+        this.time.delayedCall(3000, () => { 
             this.addItem(); 
+        });
+       
+        // * TUTORIAL
+
+       this.directionsBG = this.add.rectangle(centerX, centerY - 192, 256, 64, 0xffffff, 0.5).setAlpha(0).setDepth(2);
+
+       // * Show Them How To Move
+
+       this.movementInfo = this.add.sprite(centerX, centerY - 192, 'movement').setAlpha(0).setDepth(2);
+        
+       this.time.delayedCall(1500, () => { 
+         this.tweens.add({
+            targets: [this.directionsBG, this.movementInfo],
+            alpha: 1,
+            duration: 300,
+         })
+       }); 
+
+        this.time.delayedCall(5000, () => { 
+            this.tweens.add({
+                targets: [this.directionsBG, this.movementInfo],
+                alpha: 0,
+                duration: 300,
+             })
         });
 
         // * DIFFICULTY TIMER * //
@@ -266,13 +296,13 @@ class Play extends Phaser.Scene {
             item.body.setSize(8,8,true)
             item.anims.play('fuse');
             this.obstacleGroup.add(item);
-        } else if((probability == 69)) {
+        } else if((probability == 69) && this.itemSpeed >= 600) {
             item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'star');
             item.anims.play('yipee');
             this.starGroup.add(item);
         } else {
             if(this.maxSpeed) {
-                let chance = Phaser.Math.Between(0,3);
+                let chance = Phaser.Math.Between(0,2);
                 if(chance == 0) {
                     item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'bomb');
                     item.setScale(2);
@@ -297,9 +327,18 @@ class Play extends Phaser.Scene {
     }
 
     speedup() {
+        // * add +1 to Multiplier
         this.sound.play('multiplier', {volume: 0.25})
         this.multiplier += 1;
         this.multiplierText.text = `x${this.multiplier}`
+        this.tweens.add({
+            targets: [this.multiplierText],
+            y: borderUISize*4,
+            ease: 'Elastic.InOut',
+            duration: 100,
+            yoyo: true
+        })
+
         if(this.scrollSpeed <= this.maxScrollSpeed) {
             this.scrollSpeed += .5
             this.itemSpeed = 60 * this.scrollSpeed;
@@ -321,9 +360,10 @@ class Play extends Phaser.Scene {
         // * LANE MOVEMENT * //
         if (!this.kart.destroyed) {
 
-            // * RAINBOW * //
+            // * RAINBOWS AND STARS * //
 
             this.rainbow.tilePositionY -= this.scrollSpeed;
+            this.starfield.tilePositionY -= 0.1 * this.scrollSpeed;
             
             // * MOVEMENT * //
 
@@ -513,6 +553,13 @@ class Play extends Phaser.Scene {
                 this.sound.play('multiplier', {volume: 0.25})
                 this.multiplier += 1;
                 this.multiplierText.text = `x${this.multiplier}`
+                this.tweens.add({
+                    targets: [this.multiplierText],
+                    y: borderUISize*4,
+                    ease: 'Elastic.InOut',
+                    duration: 100,
+                    yoyo: true
+                })
             }
             
         }
