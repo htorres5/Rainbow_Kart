@@ -23,7 +23,7 @@ class Play extends Phaser.Scene {
 
         // * BGM
         this.load.audio('unknown_cities', 'assets/music/PerituneMaterial_Unknown_Cities.mp3');
-        this.load.audio('fun', 'assets/music/')
+        this.load.audio('fun', 'assets/music/PerituneMaterial_Battle_Fun.mp3')
 
         // * SFX
         this.load.audio('sfx_slip', 'assets/sounds/slip.mp3');
@@ -41,6 +41,8 @@ class Play extends Phaser.Scene {
         // play music
         this.music = this.sound.add('unknown_cities', {volume: 0.25, loop: true});
         this.music.play();
+
+        this.starMusic = this.sound.add('fun', {volume: 0.25, loop: true});
 
         // white borders
         this.add.rectangle(0, 0, game.config.width, borderUISize*7, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
@@ -357,6 +359,8 @@ class Play extends Phaser.Scene {
                     this.starTimer.remove();
                     this.kart.invincible = false;
                     this.hasStar = false;
+                    this.starMusic.stop();
+                    this.music.resume();
                     console.log('star ended');
                 }
             }
@@ -458,6 +462,8 @@ class Play extends Phaser.Scene {
         console.log(`start of func: ${this.starDuration} ${this.kart.invincible}`);
         if (this.starDuration == 0) {
             console.log('entered')
+            this.music.pause();
+            this.starMusic.play();
             this.starTimer = this.time.addEvent({
                 delay: 1000,
                 callback: () => { this.starDuration -=1; },
