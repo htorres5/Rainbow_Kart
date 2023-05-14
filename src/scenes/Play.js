@@ -27,6 +27,9 @@ class Play extends Phaser.Scene {
         // * SFX
         this.load.audio('sfx_slip', 'assets/sounds/slip.mp3');
         this.load.audio('sfx_explosion', 'assets/sounds/explosion.mp3');
+        this.load.audio('heal', 'assets/sounds/heal.wav');
+        this.load.audio('max_health', 'assets/sounds/max_health.wav');
+        this.load.
 
     }
 
@@ -101,7 +104,12 @@ class Play extends Phaser.Scene {
         keyLEFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         keyRIGHT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
 
-        // * health UI * //
+        // * UI * //
+
+        // * Health * //
+
+        this.healthPositionY = centerY + 192,
+        this.healthPositionX = game.config.width - borderUISize*1.5
         this.hearts = this.add.group({
             classType: Phaser.GameObjects.Image
         });
@@ -113,13 +121,23 @@ class Play extends Phaser.Scene {
                 y: 1,
             },
             setXY: {
-                x: game.config.width - borderUISize*2,
-                y: game.config.height/2 + 192,
+                x: this.healthPositionX,
+                y: this.healthPositionY,
                 stepY: -64
             },
             quantity: this.kart.health
         }
         this.hearts.createMultiple(this.heartsConfig);
+        this.isHealthMax = false;
+
+        this.maxHealthTextConfig = {
+            fontFamily: 'Pixel_NES',
+            fontSize: '25px',
+            strokeThickness: 4,
+            stroke: '#000000'
+        }
+    
+        this.maxHealthText = this.add.text(game.config.width - borderUISize*5, centerY - 340, 'MAX', this.maxHealthTextConfig).setOrigin(0.5).setAlpha(0);
 
         // * OBSTACLES * //
 
@@ -163,10 +181,10 @@ class Play extends Phaser.Scene {
         let lane = Phaser.Math.Between(0,2);
         let probability = Phaser.Math.Between(0,100);
         let item = undefined;
-        if((probability >= 0) && (probability <= 5)) {
+        if((probability >= 0) && (probability <= 2)) {
             item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'heart');
             this.heartGroup.add(item);
-        } else if((probability >= 6) && (probability <= 10)) {
+        } else if((probability >= 3) && (probability <= 7)) {
             item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'bomb');
             item.setScale(2);
             item.body.setSize(8,8,true)
@@ -193,7 +211,10 @@ class Play extends Phaser.Scene {
         if (!this.kart.destroyed) {
 
             // * RAINBOW * //
+
             this.rainbow.tilePositionY -= this.scrollSpeed;
+            
+            // * MOVEMENT * //
 
             if(Phaser.Input.Keyboard.JustDown(keyLEFT) && this.currentLane > 0 && this.isMoving == false) {
                 this.isMoving = true;
@@ -213,7 +234,8 @@ class Play extends Phaser.Scene {
                 // console.log(this.physics.moveTo(this.kart, this.kart_x , this.kart_y, this.moveSpeed));
             }
 
-            // check for collisions
+            // * COLLISIONS * //
+
             this.physics.world.overlap(this.kart, this.obstacleGroup, this.bombCollision, null, this);
 
             this.physics.world.collide(this.kart, this.bananaGroup, this.bananaCollision, null, this);
@@ -245,11 +267,19 @@ class Play extends Phaser.Scene {
                 });
             }
 
+            // * shows MAX if health is max
+            if (this.kart.health == this.kart.maxHealth) {
+                this.maxHealthText.setAlpha(1);
+            } else {
+                this.maxHealthText.setAlpha(0);
+            }
+            // * GAME OVER
+
             if(this.kart.destroyed) {
                 this.tweens.add({
                     targets: this.music,
-                    volume: 0.05,
-                    duration: 500
+                    volume: 0,
+                    duration: 2500
                 })
                 //this.music.stop();
             }
@@ -263,6 +293,7 @@ class Play extends Phaser.Scene {
         // * Make it so kart stops moving horizontally
         this.kart.body.reset(this.kart.body.x + this.kart.width/2, this.kart.body.y + this.kart.height/2);
 
+        // TODO: move to game over
         // * stop obstacles
         this.obstacleGroup.children.each(function(obstacle) {
             obstacle.setVelocityY(0);
@@ -283,8 +314,9 @@ class Play extends Phaser.Scene {
 
     heartCollision(kart, heart) {
         heart.destroy();
-        if (this.kart.health <= this.kart.maxHealth) {
+        if (this.kart.health < this.kart.maxHealth) {
             this.kart.health += 1;
+            this.sound.play('heal', {volume: 0.25})
             let lastHeart = this.hearts.getLast(true);
             console.log(lastHeart.y)
             this.hearts.createFromConfig({
@@ -294,10 +326,33 @@ class Play extends Phaser.Scene {
                     y: 1,
                 },
                 setXY: {
-                    x: game.config.width - borderUISize*2,
+                    x: this.healthPositionX,
                     y: lastHeart.y - 64,
                 },
             })
+        } else {
+            if(this.isHealthMax == false) {
+                this.isHealthMax = true;
+                this.maxHealthUI = this.add.rectangle(this.healthPositionX, this.healthPositionY, 64, 512, 0xffffff, .3).setOrigin(1);
+
+                this.maxHealthFlashingText = this.add.text(game.config.width - borderUISize*5, centerY - 128, 'M\nA\nX', this.maxHealthTextConfig).setOrigin(0.5);
+                
+                this.tweens.add({
+                    targets: this.maxHealthFlashingText,
+                    alpha: 0,
+                    ease: 'Cubic.easeOut',  
+                    duration: 300,
+                    repeat: -1,
+                    yoyo: true
+                })
+                
+                this.time.delayedCall(2000, () => {
+                    console.log('called')
+                    this.maxHealthUI.destroy();
+                    this.maxHealthFlashingText.destroy();
+                })
+                this.sound.play('max_health', {volume: 0.25})
+            }
         }
     }
 
@@ -305,7 +360,8 @@ class Play extends Phaser.Scene {
         bomb.destroy();
         this.hearts.clear(true, true)
         this.destroyKart();
-        this.hearts = [];
+        this.isHealthMax = false;
+
     }
 
     bananaCollision(kart, banana) {
@@ -319,6 +375,7 @@ class Play extends Phaser.Scene {
         // remove health
         this.kart.health -= 1;
         this.kart.hit = true;
+        this.isHealthMax = false;
 
         this.hearts.remove(this.hearts.getLast(true), true);
 
