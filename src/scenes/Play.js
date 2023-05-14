@@ -33,10 +33,7 @@ class Play extends Phaser.Scene {
     }
 
     create() {
-        // reset paramaters
-        this.scrollSpeed = 3;
-        this.maxScrollSpeed = 17;
-        this.itemSpeed = 60 * this.scrollSpeed;
+
 
         // add rainbow
         this.rainbow = this.add.tileSprite(centerX - 160, 0, 320, 854, 'rainbow').setOrigin(0, 0);
@@ -46,7 +43,7 @@ class Play extends Phaser.Scene {
         this.music.play();
 
         // white borders
-        this.add.rectangle(0, 0, game.config.width, borderUISize, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
+        this.add.rectangle(0, 0, game.config.width, borderUISize*7, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
         this.add.rectangle(0, game.config.height - borderUISize, game.config.width, borderUISize, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
         this.add.rectangle(0, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
         this.add.rectangle(game.config.width - borderUISize, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
@@ -105,6 +102,12 @@ class Play extends Phaser.Scene {
 
         // * UI * //
 
+        this.UITextConfig = {
+            fontFamily: 'Pixel_NES',
+            fontSize: '12px',
+            color: '#222034'
+        }
+
         // * Health * //
 
         this.healthPositionY = centerY + 192,
@@ -137,6 +140,51 @@ class Play extends Phaser.Scene {
         }
     
         this.maxHealthText = this.add.text(game.config.width - borderUISize*5, centerY - 340, 'MAX', this.maxHealthTextConfig).setOrigin(0.5).setAlpha(0);
+
+        // * Score * //
+
+        this.score = 0;
+        this.multiplier = 1;
+
+        this.scoreTextConfig = {
+            fontFamily: 'Pixel_NES',
+            fontSize: '30px',
+            color: '#df7126'
+        }
+        
+        this.multiplierTextConfig = {
+            fontFamily: 'Pixel_NES',
+            fontSize: '30px',
+            color: '#222034'
+        }
+
+        this.scoreText = this.add.text(centerX, borderUISize*3, `${this.score}`, this.scoreTextConfig).setOrigin(0.5).setDepth(2);
+
+        this.multiplierTextUI = this.add.text(game.config.width - borderUISize, borderUISize, `Multiplier`, this.UITextConfig).setOrigin(1, 0.5).setDepth(2);
+        this.multiplierText = this.add.text(game.config.width - borderUISize, borderUISize*3, `x${this.multiplier}`, this.multiplierTextConfig).setOrigin(1, 0.5).setDepth(2);
+
+        
+        this.scoreTimer = this.time.addEvent({
+            delay: 100,
+            callback: this.updateScore,
+            callbackScope: this,
+            loop: true
+        })
+
+        // * Speed
+        // reset paramaters
+        this.scrollSpeed = 3;
+        this.maxScrollSpeed = 15;
+        this.itemSpeed = 60 * this.scrollSpeed;
+
+        this.speedTextConfig = {
+            fontFamily: 'Pixel_NES',
+            fontSize: '30px',
+            color: '#222034'
+        }
+
+        this.speedTextUI = this.add.text(borderUISize, borderUISize, `Speed`, this.UITextConfig).setOrigin(0, 0.5).setDepth(2);
+        this.speedText = this.add.text(borderUISize, borderUISize*3, `${this.itemSpeed}`, this.speedTextConfig).setOrigin(0, 0.5).setDepth(2);
 
         // * OBSTACLES * //
 
@@ -195,12 +243,24 @@ class Play extends Phaser.Scene {
         }
     }
 
+    updateScore() {
+        this.score += 50 * this.multiplier;
+        this.scoreText.text = `${this.score}`;
+    }
+
     speedup() {
+        this.sound.play('multiplier', {volume: 0.25})
+        this.multiplier += 1;
+        this.multiplierText.text = `x${this.multiplier}`
         if(this.scrollSpeed <= this.maxScrollSpeed) {
             this.scrollSpeed += .5
             this.itemSpeed = 60 * this.scrollSpeed;
+            this.speedText.text = `${this.itemSpeed}`;
             this.music.rate += 0.001; 
             console.log(this.itemSpeed)
+        } else {
+            this.speedTextConfig.color = '#ff5f79'
+            this.speedText.text = `MAX`;
         }
     }
 
@@ -219,18 +279,12 @@ class Play extends Phaser.Scene {
                 this.isMoving = true;
                 this.currentLane -= 1;
                 this.kart_x = this.lanes[this.currentLane].x;
-                // console.log(this.kart_x)
                 this.physics.moveTo(this.kart, this.kart_x , this.kart_y, this.moveSpeed)
-                // console.log(this.physics.moveTo(this.kart, this.kart_x , this.kart_y, this.moveSpeed));
-                // console.log(this.currentLane)
             } else if (Phaser.Input.Keyboard.JustDown(keyRIGHT) && this.currentLane < 2 && this.isMoving == false) {
                 this.isMoving = true;
                 this.currentLane += 1;
-                // console.log(this.currentLane)
                 this.kart_x = this.lanes[this.currentLane].x;
-                // console.log(this.kart_x)
                 this.physics.moveTo(this.kart, this.kart_x , this.kart_y, this.moveSpeed)
-                // console.log(this.physics.moveTo(this.kart, this.kart_x , this.kart_y, this.moveSpeed));
             }
 
             // * COLLISIONS * //
@@ -276,6 +330,8 @@ class Play extends Phaser.Scene {
             // * GAME OVER
 
             if(this.kart.destroyed) {
+                this.scoreTimer.remove();
+                this.difficultyTimer.remove();
                 this.tweens.add({
                     targets: this.music,
                     volume: 0,
@@ -288,6 +344,7 @@ class Play extends Phaser.Scene {
 
     destroyKart() {
         this.kart.destroyed = true;
+        this.maxHealthText.setAlpha(0);
         this.cameras.main.shake(500, 0.0075);
 
         // * Make it so kart stops moving horizontally
@@ -354,6 +411,8 @@ class Play extends Phaser.Scene {
                 this.sound.play('max_health', {volume: 0.25})
             } else {
                 this.sound.play('multiplier', {volume: 0.25})
+                this.multiplier += 1;
+                this.multiplierText.text = `x${this.multiplier}`
             }
             
         }
