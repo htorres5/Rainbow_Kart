@@ -186,8 +186,9 @@ class Play extends Phaser.Scene {
 
         // * Speed
         // reset paramaters
-        this.scrollSpeed = 3;
-        this.maxScrollSpeed = 15;
+        this.scrollSpeed = 3; 
+        this.maxScrollSpeed = 20;
+        this.maxSpeed = false;
         this.itemSpeed = 60 * this.scrollSpeed;
         this.tolerance = 10;
 
@@ -256,7 +257,7 @@ class Play extends Phaser.Scene {
         let probability = Phaser.Math.Between(0,100);
         let item = undefined;
 
-        if((probability >= 0) && (probability <= 2)) {
+        if((probability >= 0) && (probability <= 2) && (this.maxSpeed == false)) {
             item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'heart');
             this.heartGroup.add(item);
         } else if((probability >= 4) && (probability <= 7)) {
@@ -270,8 +271,23 @@ class Play extends Phaser.Scene {
             item.anims.play('yipee');
             this.starGroup.add(item);
         } else {
-            item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'banana');
-            this.bananaGroup.add(item);
+            if(this.maxSpeed) {
+                let chance = Phaser.Math.Between(0,3);
+                if(chance == 0) {
+                    item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'bomb');
+                    item.setScale(2);
+                    item.body.setSize(8,8,true)
+                    item.anims.play('fuse');
+                    this.obstacleGroup.add(item);
+
+                } else {
+                    item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'banana');
+                    this.bananaGroup.add(item);
+                }
+            } else {
+                item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'banana');
+                this.bananaGroup.add(item);
+            }
         }
     }
 
@@ -294,6 +310,7 @@ class Play extends Phaser.Scene {
             this.music.rate += 0.001; 
             console.log(this.itemSpeed)
         } else {
+            this.maxSpeed = true;
             this.speedTextConfig.color = '#ff5f79'
             this.speedText.text = `MAX`;
         }
