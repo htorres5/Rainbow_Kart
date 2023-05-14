@@ -7,6 +7,14 @@ class Menu extends Phaser.Scene {
     preload() {
         // * Menu Music
         this.load.audio('chill', 'assets/music/PerituneMaterial_SnowChill.mp3')
+
+        // * Keys
+        this.load.image('space_key', 'assets/sprites/controls/space_key.png')
+        this.load.image('a_key', 'assets/sprites/controls/a_key.png')
+        this.load.image('d_key', 'assets/sprites/controls/d_key.png')
+        this.load.image('f_key', 'assets/sprites/controls/f_key.png')
+        this.load.image('c_key', 'assets/sprites/controls/c_key.png')
+
     }
     create ()
     {     
@@ -41,6 +49,48 @@ class Menu extends Phaser.Scene {
             alpha: 1,
             duration: 2000,
         })
+
+        // * KEYS* //
+
+        keySPACE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
+        keyC = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
+
+        // * MENU UI *//
+
+        this.UITextConfig = {
+            fontFamily: 'Pixel_NES',
+            fontSize: '12px',
+            fill: '#FFF',
+            align: 'center'
+        }
+
+        this.startText = this.add.text(centerX, centerY + 192 + borderPadding, 'Space\nTo Start', this.UITextConfig).setOrigin(0.5).setAlpha(0);
+        this.startKey = this.add.sprite(centerX, centerY + 192, 'space_key').setScale(0.75).setAlpha(0);
+
+        this.time.delayedCall(1000, () => {
+            // fade in title
+            this.tweens.add({
+                targets: [this.startText, this.startKey],
+                alpha: 1,
+                duration: 2000,
+            })
+        })
+
+        this.tutorialText = this.add.text(centerX/2, centerY + 256 + borderPadding, 'Tutorial', this.UITextConfig).setOrigin(0.5).setAlpha(0);
+        this.tutorialKey = this.add.sprite(centerX/2, centerY + 256, 'f_key').setScale(0.75).setAlpha(0);
+
+        this.creditsUIText = this.add.text(centerX + centerX/2, centerY + 256 + borderPadding, 'Credits', this.UITextConfig).setOrigin(0.5).setAlpha(0);
+        this.creditsKey = this.add.sprite(centerX + centerX/2, centerY + 256, 'c_key').setScale(0.75).setAlpha(0);
+        
+        this.time.delayedCall(2000, () => {
+            // fade in title
+            this.tweens.add({
+                targets: [this.tutorialText, this.tutorialKey, this.creditsUIText, this.creditsKey],
+                alpha: 1,
+                duration: 2000,
+            })
+        })
     }
 
     update ()
@@ -56,6 +106,22 @@ class Menu extends Phaser.Scene {
         {
             this.i = 0;
         }
+
+        // * MENU
+        if (Phaser.Input.Keyboard.JustDown(keySPACE)) {
+            this.tweens.add({
+                targets: this.titleMusic,
+                volume: 0,
+                duration: 2500,
+                onComplete: () =>  {this.titleMusic.stop()}
+            })
+            this.cameras.main.fadeOut(2500, 0, 0, 0)
+            this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, (cam, effect) => {
+                this.scene.start('playScene');
+            })
+                
+        }
+
     }
 
     // create() {
