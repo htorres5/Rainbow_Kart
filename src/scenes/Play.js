@@ -29,7 +29,6 @@ class Play extends Phaser.Scene {
         this.load.audio('sfx_explosion', 'assets/sounds/explosion.mp3');
         this.load.audio('heal', 'assets/sounds/heal.wav');
         this.load.audio('max_health', 'assets/sounds/max_health.wav');
-        this.load.
 
     }
 
