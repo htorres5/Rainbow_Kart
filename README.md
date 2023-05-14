@@ -1,4 +1,4 @@
-# Rainbow Kart
+# :rainbow: Rainbow Kart
 
 ### Created by: Hector Torres
 ### ~30 Hours
