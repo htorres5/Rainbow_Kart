@@ -30,10 +30,13 @@ class Play extends Phaser.Scene {
         this.load.audio('sfx_explosion', 'assets/sounds/explosion.mp3');
         this.load.audio('heal', 'assets/sounds/heal.wav');
         this.load.audio('max_health', 'assets/sounds/max_health.wav');
-        this.load.audio('multiplier', 'assets/sounds/coin.wav')
+        this.load.audio('multiplier', 'assets/sounds/coin.wav');
+        this.load.audio('hit', 'assets/sounds/hit.wav')
     }
 
     create() {
+        // fade in scene
+        this.cameras.main.fadeIn(1000, 0, 0, 0)
 
         // add rainbow
         this.rainbow = this.add.tileSprite(centerX - 160, 0, 320, 854, 'rainbow').setOrigin(0, 0);
@@ -512,6 +515,8 @@ class Play extends Phaser.Scene {
             this.hearts.clear(true, true)
             this.destroyKart();
             this.isHealthMax = false;
+        } else {
+            this.sound.play('hit', {volume: 0.25});
         }
     }
 
@@ -551,6 +556,8 @@ class Play extends Phaser.Scene {
                 }
             })
 
+        } else {
+            this.sound.play('hit', {volume: 0.25});
         }
         console.log(this.kart.health)
     }

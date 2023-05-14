@@ -119,7 +119,19 @@ class Menu extends Phaser.Scene {
             this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, (cam, effect) => {
                 this.scene.start('playScene');
             })
-                
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(keyF)) {
+            this.tweens.add({
+                targets: this.titleMusic,
+                volume: 0,
+                duration: 2500,
+                onComplete: () =>  {this.titleMusic.stop()}
+            })
+            this.cameras.main.fadeOut(2500, 0, 0, 0)
+            this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, (cam, effect) => {
+                this.scene.start('tutorialScene');
+            })
         }
 
     }
