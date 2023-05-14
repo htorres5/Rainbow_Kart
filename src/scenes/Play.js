@@ -43,6 +43,7 @@ class Play extends Phaser.Scene {
         this.load.audio('max_health', 'assets/sounds/max_health.wav');
         this.load.audio('multiplier', 'assets/sounds/coin.wav');
         this.load.audio('hit', 'assets/sounds/hit.wav')
+        this.load.audio('high_score', 'assets/sounds/high_score.wav');
     }
 
     create() {
@@ -174,10 +175,16 @@ class Play extends Phaser.Scene {
         this.score = 0;
         this.multiplier = 1;
 
-        this.isHighScore = false;
+        
         // gets high score from local storage or sets it to 0 if it doesnt exist
         this.savedHighScore = (localStorage.getItem('savedHighScore') == "true");
         this.highScore = (!this.savedHighScore) ? 0 : parseInt(localStorage.getItem('highScore'));
+
+        if(!this.savedHighScore) {
+            this.isHighScore = true;
+        } else {
+            this.isHighScore = false;
+        }
 
         // gets highest multiplier from local storage or sets it to 0 if it doesnt exist
         this.savedHighestMultiplier = (localStorage.getItem('savedHighestMultiplier') == "true");
@@ -227,10 +234,10 @@ class Play extends Phaser.Scene {
             loop: true
         })
 
-        // * Speed
+        // * Speed * //
         // reset paramaters
         this.scrollSpeed = 3; 
-        this.maxScrollSpeed = 20;
+        this.maxScrollSpeed = 32;
         this.maxSpeed = false;
         this.itemSpeed = 60 * this.scrollSpeed;
         this.tolerance = 10;
@@ -349,7 +356,7 @@ class Play extends Phaser.Scene {
             item.anims.play('fuse');
             this.obstacleGroup.add(item);
         } else if((probability == 69) && this.itemSpeed >= 600) {
-            if((this.multiplier >= 50) && this.maxSpeed == true) {
+            if((this.multiplier >= 50) && this.itemSpeed >= 1200) {
                 let probability = Phaser.Math.Between(0,100);
                 if(probability == 69) {
                     item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'star');
@@ -365,9 +372,9 @@ class Play extends Phaser.Scene {
                 this.starGroup.add(item);
             }
         } else {
-            if(this.maxSpeed) {
+            if(this.itemSpeed >= 1500) {
                 let chance = Phaser.Math.Between(0,2);
-                if(chance == 0 || this.multiplier >= 50) {
+                if(chance == 0 || this.multiplier >= 80) {
                     item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'bomb');
                     item.setScale(2);
                     item.body.setSize(8,8,true)
@@ -486,6 +493,17 @@ class Play extends Phaser.Scene {
                 }
             }
 
+            // * Change UI if High Score
+            if(this.score > this.highScore && this.isHighScore == false) {
+                this.isHighScore = true;
+                this.sound.play('high_score', {volume: 0.25})
+                this.tweens.add({
+                    targets: [this.highScoreUI, this.highestMultiplierUI, this.bestSpeedUI],
+                    alpha: 0,
+                    duration: 1000
+                });
+            }
+
             // * OBSTACLE INTERACTIONS * //
 
             // * Spins Kart if Hit by Banana
@@ -567,7 +585,6 @@ class Play extends Phaser.Scene {
 
                 // * check if high score
                 if(this.score > this.highScore) {
-                    this.isHighScore = true;
 
                     this.highScore = this.score;
                     this.highestMultiplier = this.multiplier;
