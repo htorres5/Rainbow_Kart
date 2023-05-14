@@ -103,7 +103,7 @@ class Play extends Phaser.Scene {
         this.kart.invincible = false;
         this.kart.destroyed = false;
 
-        this.kart.health = 8;
+        this.kart.health = 5;
         this.kart.maxHealth = 8;
 
         // keys
@@ -186,6 +186,7 @@ class Play extends Phaser.Scene {
         this.scrollSpeed = 3;
         this.maxScrollSpeed = 15;
         this.itemSpeed = 60 * this.scrollSpeed;
+        this.tolerance = 10;
 
         this.speedTextConfig = {
             fontFamily: 'Pixel_NES',
@@ -218,8 +219,15 @@ class Play extends Phaser.Scene {
             runChildUpdate: true
         })
 
+        // logic
         this.starDuration = 0;
         this.hasStar = false;
+        
+        // colors :3
+        this.hsv = Phaser.Display.Color.HSVColorWheel();
+        this.i = 0;
+
+
         this.starGroup = this.add.group({
             runChildUpdate: true,
         })
@@ -248,13 +256,13 @@ class Play extends Phaser.Scene {
         if((probability >= 0) && (probability <= 2)) {
             item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'heart');
             this.heartGroup.add(item);
-        } else if((probability >= 3) && (probability <= 7)) {
+        } else if((probability >= 4) && (probability <= 7)) {
             item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'bomb');
             item.setScale(2);
             item.body.setSize(8,8,true)
             item.anims.play('fuse');
             this.obstacleGroup.add(item);
-        } else if((probability >= 8) && (probability <= 50)) {
+        } else if((probability == 69)) {
             item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'star');
             item.anims.play('yipee');
             this.starGroup.add(item);
@@ -277,6 +285,9 @@ class Play extends Phaser.Scene {
             this.scrollSpeed += .5
             this.itemSpeed = 60 * this.scrollSpeed;
             this.speedText.text = `${this.itemSpeed}`;
+
+            this.tolerance += 3;
+            this.moveSpeed += 25;
             this.music.rate += 0.001; 
             console.log(this.itemSpeed)
         } else {
@@ -317,9 +328,7 @@ class Play extends Phaser.Scene {
             this.physics.world.collide(this.kart, this.heartGroup, this.heartCollision, null, this);
 
             this.physics.world.collide(this.kart, this.starGroup, this.starCollision, null, this);
-        
-
-            const tolerance = 10;
+    
 
             const distance = Phaser.Math.Distance.BetweenPoints(this.kart, this.lanes[this.currentLane]);
 
@@ -327,7 +336,7 @@ class Play extends Phaser.Scene {
             if(this.kart.destroyed == false) {
                 if (this.kart.body.speed > 0) {
 
-                    if (distance < tolerance) {
+                    if (distance < this.tolerance) {
                         this.kart.body.reset(this.kart_x, this.kart_y);
                         this.isMoving = false;
                     }
@@ -353,9 +362,24 @@ class Play extends Phaser.Scene {
                 this.maxHealthText.setAlpha(0);
             }
 
-            // * ends star invincibility
+            // * colors :3
             if(this.hasStar == true) {
+
+                let top = this.hsv[this.i].color;
+                let bottom = this.hsv[359 - this.i].color;
+                
+                this.kart.setTint(top, bottom, top, bottom);
+        
+                this.i++;
+        
+                if (this.i === 360)
+                {
+                    this.i = 0;
+                }
+
+                // * ends star invincibility
                 if (this.starDuration == 0) {
+                    this.kart.clearTint();
                     this.starTimer.remove();
                     this.kart.invincible = false;
                     this.hasStar = false;
@@ -371,6 +395,22 @@ class Play extends Phaser.Scene {
             if(this.kart.destroyed) {
                 this.scoreTimer.remove();
                 this.difficultyTimer.remove();
+                this.maxHealthText.setAlpha(0);
+
+                // * stop obstacles
+                this.obstacleGroup.children.each(function(obstacle) {
+                    obstacle.setVelocityY(0);
+                }, this);
+                this.bananaGroup.children.each(function(obstacle) {
+                obstacle.setVelocityY(0);
+                }, this);
+                this.heartGroup.children.each(function(obstacle) {
+                    obstacle.setVelocityY(0);
+                }, this);
+                this.starGroup.children.each(function(obstacle) {
+                    obstacle.setVelocityY(0);
+                }, this);
+
                 this.tweens.add({
                     targets: this.music,
                     volume: 0,
@@ -382,21 +422,11 @@ class Play extends Phaser.Scene {
 
     destroyKart() {
         this.kart.destroyed = true;
-        this.maxHealthText.setAlpha(0);
         this.cameras.main.shake(500, 0.0075);
 
         // * Make it so kart stops moving horizontally
         this.kart.body.reset(this.kart.body.x + this.kart.width/2, this.kart.body.y + this.kart.height/2);
 
-        // TODO: move to game over
-        // * stop obstacles
-        this.obstacleGroup.children.each(function(obstacle) {
-            obstacle.setVelocityY(0);
-        }, this);
-        this.bananaGroup.children.each(function(obstacle) {
-        obstacle.setVelocityY(0);
-        }, this);
-        
         // play sound
         this.sound.play('sfx_explosion', { volume: 0.1 })
 
