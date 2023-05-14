@@ -7,22 +7,23 @@ class Play extends Phaser.Scene {
         // * Protaganist
         this.load.image('kart', 'assets/sprites/kart.png');
 
-        // * Obstacles
+        // * Items
         this.load.image('banana', 'assets/sprites/banana.png');
         this.load.image('obstacle', 'assets/sprites/obstacle.png');
         this.load.spritesheet('bomb', './assets/sprites/sheets/bomb.png', {frameWidth: 32, frameHeight: 32, startFrame: 0, endFrame: 5});
+        this.load.image('heart', 'assets/sprites/heart.png');
+        this.load.spritesheet('star', './assets/sprites/sheets/star.png', {frameWidth: 64, frameHeight: 64, startFrame: 0, endFrame: 5});
 
         // * Effects
         this.load.atlas('explosion', 'assets/sprites/sheets/explosion.png','assets/sprites/sheets/explosion.json');
 
         // * BG
         this.load.image('rainbow', 'assets/sprites/rainbow.png');
-
-        // * UI
-        this.load.image('heart', 'assets/sprites/heart.png');
+    
 
         // * BGM
         this.load.audio('unknown_cities', 'assets/music/PerituneMaterial_Unknown_Cities.mp3');
+        this.load.audio('fun', 'assets/music/')
 
         // * SFX
         this.load.audio('sfx_slip', 'assets/sounds/slip.mp3');
@@ -33,7 +34,6 @@ class Play extends Phaser.Scene {
     }
 
     create() {
-
 
         // add rainbow
         this.rainbow = this.add.tileSprite(centerX - 160, 0, 320, 854, 'rainbow').setOrigin(0, 0);
@@ -60,6 +60,14 @@ class Play extends Phaser.Scene {
             }),
             frameRate: 24,
         })
+
+        // Star animation
+        this.anims.create({
+            key: 'yipee',
+            frames: this.anims.generateFrameNumbers('star', { start: 0, end: 5, first: 0}),
+            frameRate: 24,
+            repeat: -1
+        });
 
         // Y Coordinate For kart
         this.kart_y = game.config.height - borderUISize*2 - borderPadding*2;
@@ -208,6 +216,12 @@ class Play extends Phaser.Scene {
             runChildUpdate: true
         })
 
+        this.starDuration = 0;
+        this.hasStar = false;
+        this.starGroup = this.add.group({
+            runChildUpdate: true,
+        })
+
         // delay to spawn obstacles at start
         this.time.delayedCall(2500, () => { 
             this.addItem(); 
@@ -228,6 +242,7 @@ class Play extends Phaser.Scene {
         let lane = Phaser.Math.Between(0,2);
         let probability = Phaser.Math.Between(0,100);
         let item = undefined;
+
         if((probability >= 0) && (probability <= 2)) {
             item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'heart');
             this.heartGroup.add(item);
@@ -237,6 +252,10 @@ class Play extends Phaser.Scene {
             item.body.setSize(8,8,true)
             item.anims.play('fuse');
             this.obstacleGroup.add(item);
+        } else if((probability >= 8) && (probability <= 50)) {
+            item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'star');
+            item.anims.play('yipee');
+            this.starGroup.add(item);
         } else {
             item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'banana');
             this.bananaGroup.add(item);
@@ -294,6 +313,8 @@ class Play extends Phaser.Scene {
             this.physics.world.collide(this.kart, this.bananaGroup, this.bananaCollision, null, this);
 
             this.physics.world.collide(this.kart, this.heartGroup, this.heartCollision, null, this);
+
+            this.physics.world.collide(this.kart, this.starGroup, this.starCollision, null, this);
         
 
             const tolerance = 10;
@@ -310,6 +331,8 @@ class Play extends Phaser.Scene {
                     }
                 }
             }
+
+            // * OBSTACLE INTERACTIONS * //
 
             // * Spins Kart if Hit by Banana
             if(this.kart.hit == true) {
@@ -328,6 +351,17 @@ class Play extends Phaser.Scene {
                 this.maxHealthText.setAlpha(0);
             }
 
+            // * ends star invincibility
+            if(this.hasStar == true) {
+                if (this.starDuration == 0) {
+                    this.starTimer.remove();
+                    this.kart.invincible = false;
+                    this.hasStar = false;
+                    console.log('star ended');
+                }
+            }
+
+
             // * GAME OVER
 
             if(this.kart.destroyed) {
@@ -338,7 +372,6 @@ class Play extends Phaser.Scene {
                     volume: 0,
                     duration: 2500
                 })
-                //this.music.stop();
             }
         }
     }
@@ -419,10 +452,27 @@ class Play extends Phaser.Scene {
         }
     }
 
+    starCollision(kart, star) {
+        star.destroy();
+        this.hasStar = true;
+        console.log(`start of func: ${this.starDuration} ${this.kart.invincible}`);
+        if (this.starDuration == 0) {
+            console.log('entered')
+            this.starTimer = this.time.addEvent({
+                delay: 1000,
+                callback: () => { this.starDuration -=1; },
+                loop: true
+            })
+        }
+        this.starDuration += 20;
+        this.kart.invincible = true;
+        console.log(`end of func: ${this.starDuration} ${this.kart.invincible}`);
+    }
+
     bombCollision(kart, bomb) {
         bomb.destroy();
         console.log(this.kart.invincible)
-        if(!this.kart.invincible) {
+        if(!this.kart.invincible && this.hasStar == false) {
             this.hearts.clear(true, true)
             this.destroyKart();
             this.isHealthMax = false;
@@ -434,7 +484,7 @@ class Play extends Phaser.Scene {
         // destory the banana
         banana.destroy();
 
-        if(!this.kart.invincible) {
+        if(!this.kart.invincible && this.hasStar == false) {
             // shake for dramatic effect *
             this.cameras.main.shake(450, 0.005);
 
