@@ -90,7 +90,7 @@ class Play extends Phaser.Scene {
         this.kart.setImmovable();
         this.kart.setDepth(1);
         this.kart.hit = false;
-        this.kart.invincible = true;
+        this.kart.invincible = false;
         this.kart.destroyed = false;
 
         this.kart.health = 8;
@@ -314,6 +314,7 @@ class Play extends Phaser.Scene {
             // * Spins Kart if Hit by Banana
             if(this.kart.hit == true) {
                 this.kart.angle += 6;
+
                 this.time.delayedCall(300, () => { 
                     this.kart.hit = false;
                     this.kart.angle = 0;
@@ -420,9 +421,12 @@ class Play extends Phaser.Scene {
 
     bombCollision(kart, bomb) {
         bomb.destroy();
-        this.hearts.clear(true, true)
-        this.destroyKart();
-        this.isHealthMax = false;
+        console.log(this.kart.invincible)
+        if(!this.kart.invincible) {
+            this.hearts.clear(true, true)
+            this.destroyKart();
+            this.isHealthMax = false;
+        }
     }
 
     bananaCollision(kart, banana) {
@@ -430,21 +434,37 @@ class Play extends Phaser.Scene {
         // destory the banana
         banana.destroy();
 
-        // shake for dramatic effect *
-        this.cameras.main.shake(450, 0.005);
-
-        // remove health
-        this.kart.health -= 1;
-        this.kart.hit = true;
-        this.isHealthMax = false;
-
-        this.hearts.remove(this.hearts.getLast(true), true);
+        if(!this.kart.invincible) {
+            // shake for dramatic effect *
+            this.cameras.main.shake(450, 0.005);
 
 
-        if(this.kart.health <= 0) {
-            this.destroyKart();
-        } else {
-            this.sound.play('sfx_slip', { volume: 0.5 })
+            // remove health
+            this.kart.health -= 1;
+            this.kart.hit = true;
+            this.kart.invincible = true;
+            this.isHealthMax = false;
+            this.hearts.remove(this.hearts.getLast(true), true);
+
+            if(this.kart.health <= 0) {
+                this.destroyKart();
+            } else {
+                this.sound.play('sfx_slip', { volume: 0.5 })
+            }
+
+            this.tweens.add({
+                targets: this.kart,
+                alpha: 0,
+                ease: 'Cubic.easeOut',  
+                duration: 300,
+                loop: 3,
+                yoyo: true,
+                onComplete: () => { 
+                        console.log('complete')
+                        this.kart.invincible = false; 
+                }
+            })
+
         }
         console.log(this.kart.health)
     }
