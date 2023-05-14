@@ -29,7 +29,7 @@ class Play extends Phaser.Scene {
         this.load.audio('sfx_explosion', 'assets/sounds/explosion.mp3');
         this.load.audio('heal', 'assets/sounds/heal.wav');
         this.load.audio('max_health', 'assets/sounds/max_health.wav');
-
+        this.load.audio('multiplier', 'assets/sounds/coin.wav')
     }
 
     create() {
@@ -272,6 +272,7 @@ class Play extends Phaser.Scene {
             } else {
                 this.maxHealthText.setAlpha(0);
             }
+
             // * GAME OVER
 
             if(this.kart.destroyed) {
@@ -351,7 +352,10 @@ class Play extends Phaser.Scene {
                     this.maxHealthFlashingText.destroy();
                 })
                 this.sound.play('max_health', {volume: 0.25})
+            } else {
+                this.sound.play('multiplier', {volume: 0.25})
             }
+            
         }
     }
 
@@ -360,7 +364,6 @@ class Play extends Phaser.Scene {
         this.hearts.clear(true, true)
         this.destroyKart();
         this.isHealthMax = false;
-
     }
 
     bananaCollision(kart, banana) {
