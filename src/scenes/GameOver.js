@@ -8,6 +8,10 @@ class GameOver extends Phaser.Scene {
         this.finalScore = data.score;
         this.finalMultiplier = data.multiplier;
         this.finalSpeed = data.speed;
+        this.isHighScore = data.isHighScore;
+        this.highScore = data.highScore;
+        this.highestMultiplier = data.highestMultiplier;
+        this.bestSpeed = data.bestSpeed;
     }
 
     preload() {
@@ -45,14 +49,25 @@ class GameOver extends Phaser.Scene {
 
         if(this.finalScore == 0) {
             this.statsTextConfig.fontSize = '10px'
+
             this.finalScoreText = 'Your\nFinal Score\nWill Appear\nHere.'
             this.finalMultiplierText = 'Score Increases faster\nthe longer\n you drive.'
             this.finalSpeedText = 'Your\ncurrent\nspeed.'
+
+            this.highScoreText = ''
+            this.highestMultiplierText = ''
+            this.bestSpeedText = ''
+
             this.spaceText = 'Press Space\nTo Start'
         } else {
             this.finalScoreText = `${this.finalScore}`
             this.finalMultiplierText = `x${this.finalMultiplier}`
             this.finalSpeedText = `${this.finalSpeed}`
+
+            this.highScoreText = `${this.highScore}`
+            this.highestMultiplierText = `Best\nx${this.highestMultiplier}`
+            this.bestSpeedText = `Best\n${this.bestSpeed}`
+
             this.spaceText = 'Space\nTo Restart'
         }
         
@@ -71,15 +86,29 @@ class GameOver extends Phaser.Scene {
             color: '#fff'
         }
 
+        this.bestTextConfig = {
+            fontFamily: 'Pixel_NES',
+            fontSize: '16px',
+            color: '#fff',
+            align: 'center'
+        }
+
         //  Rainbow Fill
+
+        this.text1 = this.add.text(centerX, centerY - 192 - borderUISize*3.5, 'New High Score!', this.statsTextConfig).setOrigin(0.5).setAlpha(0);
         this.text2 = this.add.text(centerX, centerY - 192, this.finalScoreText, this.scoreTextConfig).setOrigin(0.5).setAlpha(0);
         this.text2.setShadow(2, 2, "#333333", 2, true, true);
+        this.text3 = this.add.text(centerX, centerY - 192 + borderUISize*4.5, this.highScoreText, this.UITextConfig).setOrigin(0.5).setAlpha(0);
 
+        this.rainbowBestRight = this.add.text(centerX + centerX/2, centerY - borderUISize*5.5, 'New Best!', this.UITextConfig).setOrigin(0.5).setAlpha(0);
         this.multiplierTextUI = this.add.text(centerX + centerX/2, centerY - borderUISize*3, 'Multiplier', this.UITextConfig).setOrigin(0.5).setAlpha(0);
         this.finalMultiplierTextUI = this.add.text(centerX + centerX/2, centerY, this.finalMultiplierText, this.statsTextConfig).setOrigin(0.5).setAlpha(0);
+        this.highestMultiplierTextUI = this.add.text(centerX + centerX/2, centerY + borderUISize*6, this.highestMultiplierText, this.bestTextConfig).setOrigin(0.5).setAlpha(0);
 
+        this.rainbowBestLeft = this.add.text(centerX/2, centerY - borderUISize*5.5, 'New Best!', this.UITextConfig).setOrigin(0.5).setAlpha(0);
         this.speedTextUI = this.add.text(centerX/2, centerY - borderUISize*3, 'Speed', this.UITextConfig).setOrigin(0.5).setAlpha(0);
         this.finalSpeedTextUI = this.add.text(centerX/2, centerY, this.finalSpeedText, this.statsTextConfig).setOrigin(0.5).setAlpha(0);
+        this.bestSpeedTextUI = this.add.text(centerX/2, centerY + borderUISize*6, this.bestSpeedText, this.bestTextConfig).setOrigin(0.5).setAlpha(0);
 
         // fade in 
         this.tweens.add({
@@ -94,6 +123,19 @@ class GameOver extends Phaser.Scene {
                 alpha: 1,
                 duration: 500,
             })
+            if(this.isHighScore) {
+                this.tweens.add({
+                    targets: [this.text1, this.rainbowBestLeft, this.rainbowBestRight],
+                    alpha: 1,
+                    duration: 500,
+                })
+            } else {
+                this.tweens.add({
+                    targets: [this.text3, this.highestMultiplierTextUI, this.bestSpeedTextUI],
+                    alpha: 1,
+                    duration: 500,
+                })
+            }
         })
 
         // * KEYS* //
@@ -145,6 +187,8 @@ class GameOver extends Phaser.Scene {
         const top = this.hsv[this.i].color;
         const bottom = this.hsv[359 - this.i].color;
         this.text2.setTint(top, bottom, top, bottom);
+        this.rainbowBestLeft.setTint(top, bottom, top, bottom);
+        this.rainbowBestRight.setTint(top, bottom, top, bottom);
 
         this.i++;
 
@@ -178,7 +222,7 @@ class GameOver extends Phaser.Scene {
             })
             this.cameras.main.fadeOut(2500, 0, 0, 0)
             this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, (cam, effect) => {
-                this.scene.start('tutorialScene');
+                this.scene.start('menuScene');
             })
         }
 

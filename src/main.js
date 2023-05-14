@@ -1,3 +1,4 @@
+// * Go to README.md :3
 // * https://pixabay.com/sound-effects/search/explosion/
 
 console.log("uwu")

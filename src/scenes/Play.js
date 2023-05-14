@@ -3,6 +3,14 @@ class Play extends Phaser.Scene {
         super("playScene");
     }
 
+    supportsLocalStorage() {
+        try {
+            return 'localStorage' in window && window['localStorage'] !== null;
+        } catch (e) {
+            return false;
+        }
+    }
+
     preload() {
         // * Protaganist
         this.load.image('kart', 'assets/sprites/kart.png');
@@ -41,17 +49,21 @@ class Play extends Phaser.Scene {
         // fade in scene
         this.cameras.main.fadeIn(1000, 0, 0, 0)
 
-        // add rainbow
+        // * BG * //
 
         this.starfield = this.add.tileSprite(borderUISize, 0, 480, 854, 'starfield').setOrigin(0, 0);
         this.rainbow = this.add.tileSprite(centerX - 160, 0, 320, 854, 'rainbow').setOrigin(0, 0);
 
+
+        // * MUSIC * //
 
         // play music
         this.music = this.sound.add('unknown_cities', {volume: 0.25, loop: true});
         this.music.play();
 
         this.starMusic = this.sound.add('fun', {volume: 0.25, loop: true});
+
+        // * BORDER * //
 
         // white borders
         this.add.rectangle(0, 0, game.config.width, borderUISize*7, 0xFFFFFF).setOrigin(0, 0).setDepth(1);
@@ -80,10 +92,10 @@ class Play extends Phaser.Scene {
             repeat: -1
         });
 
+        // * lanes * // 
+
         // Y Coordinate For kart
         this.kart_y = game.config.height - borderUISize*2 - borderPadding*2;
-
-        // * lanes * // 
 
         // Lane X Coordinates
         this.x_of_lane0 = centerX - (64);
@@ -96,9 +108,6 @@ class Play extends Phaser.Scene {
         this.lane2 = new Phaser.Math.Vector2(this.x_of_lane2, this.kart_y);
         this.lanes = [this.lane0, this.lane1, this.lane2];
         this.currentLane = 1;
-        
-        console.log(this.lanes);
-        console.log(this.lanes[1].x);
 
         // * kart * //
         
@@ -165,6 +174,16 @@ class Play extends Phaser.Scene {
         this.score = 0;
         this.multiplier = 1;
 
+        this.isHighScore = false;
+        // gets high score from local storage or sets it to 0 if it doesnt exist
+        this.savedHighScore = (localStorage.getItem('savedHighScore') == "true");
+        this.highScore = (!this.savedHighScore) ? 0 : parseInt(localStorage.getItem('highScore'));
+
+        // gets highest multiplier from local storage or sets it to 0 if it doesnt exist
+        this.savedHighestMultiplier = (localStorage.getItem('savedHighestMultiplier') == "true");
+        this.highestMultiplier = (!this.savedHighestMultiplier) ? 0 : parseInt(localStorage.getItem('highestMultiplier'));
+
+
         this.scoreTextConfig = {
             fontFamily: 'Pixel_NES',
             fontSize: '30px',
@@ -174,13 +193,31 @@ class Play extends Phaser.Scene {
         this.multiplierTextConfig = {
             fontFamily: 'Pixel_NES',
             fontSize: '30px',
-            color: '#222034'
+            fill: '#222034'
         }
 
+        // [score]
         this.scoreText = this.add.text(centerX, borderUISize*3, `${this.score}`, this.scoreTextConfig).setOrigin(0.5).setDepth(2);
 
+        // [high score]
+        if (this.highScore == 0) { 
+            this.highScoreText = ''; 
+            this.highestMultiplierText = '';
+        }
+        else { 
+            this.highScoreText = `${this.highScore}`;
+            this.highestMultiplierText = `x${this.highestMultiplier}`;
+        }
+
+        //this.scoreTextConfig.fontSize = '12px'
+        this.highScoreUI = this.add.text(centerX, borderUISize*5.5, this.highScoreText, this.UITextConfig).setOrigin(0.5).setDepth(2);
+
+        // Multiplier:
         this.multiplierTextUI = this.add.text(game.config.width - borderUISize, borderUISize, `Multiplier`, this.UITextConfig).setOrigin(1, 0.5).setDepth(2);
+        // [Multiplier]
         this.multiplierText = this.add.text(game.config.width - borderUISize, borderUISize*3, `x${this.multiplier}`, this.multiplierTextConfig).setOrigin(1, 0.5).setDepth(2);
+        // [Highest Multiplier]
+        this.highestMultiplierUI = this.add.text(game.config.width - borderUISize, borderUISize*5.5, this.highestMultiplierText, this.UITextConfig).setOrigin(1, 0.5).setDepth(2);
 
         
         this.scoreTimer = this.time.addEvent({
@@ -198,14 +235,28 @@ class Play extends Phaser.Scene {
         this.itemSpeed = 60 * this.scrollSpeed;
         this.tolerance = 10;
 
+        // gets best speed from local storage or sets it to 0 if it doesnt exist
+        this.savedBestSpeed = (localStorage.getItem('savedBestSpeed') == "true");
+        this.bestSpeed = (!this.savedBestSpeed) ? 0 : parseInt(localStorage.getItem('bestSpeed'));
+
+        if(this.highScore == 0) {
+            this.bestSpeedText = '';
+        } else {
+            this.bestSpeedText = `${this.bestSpeed}`;
+        }
+
         this.speedTextConfig = {
             fontFamily: 'Pixel_NES',
             fontSize: '30px',
             color: '#222034'
         }
 
+        // Speed:
         this.speedTextUI = this.add.text(borderUISize, borderUISize, `Speed`, this.UITextConfig).setOrigin(0, 0.5).setDepth(2);
+        // [speed]
         this.speedText = this.add.text(borderUISize, borderUISize*3, `${this.itemSpeed}`, this.speedTextConfig).setOrigin(0, 0.5).setDepth(2);
+        // [bestSpeed]
+        this.bestSpeedUI = this.add.text(borderUISize, borderUISize*5.5, this.bestSpeedText, this.UITextConfig).setOrigin(0, 0.5).setDepth(2);
 
         // * OBSTACLES * //
 
@@ -232,6 +283,7 @@ class Play extends Phaser.Scene {
         // logic
         this.starDuration = 0;
         this.hasStar = false;
+        this.bonusMultiplier = 0;
         
         // colors :3
         this.hsv = Phaser.Display.Color.HSVColorWheel();
@@ -247,7 +299,7 @@ class Play extends Phaser.Scene {
             this.addItem(); 
         });
        
-        // * TUTORIAL
+        // * TUTORIAL * //
 
        this.directionsBG = this.add.rectangle(centerX, centerY - 192, 256, 64, 0xffffff, 0.5).setAlpha(0).setDepth(2);
 
@@ -297,13 +349,25 @@ class Play extends Phaser.Scene {
             item.anims.play('fuse');
             this.obstacleGroup.add(item);
         } else if((probability == 69) && this.itemSpeed >= 600) {
-            item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'star');
-            item.anims.play('yipee');
-            this.starGroup.add(item);
+            if((this.multiplier >= 50) && this.maxSpeed == true) {
+                let probability = Phaser.Math.Between(0,100);
+                if(probability == 69) {
+                    item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'star');
+                    item.anims.play('yipee');
+                    this.starGroup.add(item);
+                } else {
+                    item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'banana');
+                    this.bananaGroup.add(item);
+                }
+            } else {
+                item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'star');
+                item.anims.play('yipee');
+                this.starGroup.add(item);
+            }
         } else {
             if(this.maxSpeed) {
                 let chance = Phaser.Math.Between(0,2);
-                if(chance == 0) {
+                if(chance == 0 || this.multiplier >= 50) {
                     item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'bomb');
                     item.setScale(2);
                     item.body.setSize(8,8,true)
@@ -319,6 +383,26 @@ class Play extends Phaser.Scene {
                 this.bananaGroup.add(item);
             }
         }
+    }
+
+    // * Saves High Score to local storage
+    saveHighScore () {
+        if (!this.supportsLocalStorage()) { return false; }
+        
+        this.savedHighScore = true;
+        this.savedBestSpeed = true;
+        this.savedHighestMultiplier = true;
+
+        localStorage.setItem('savedHighScore', `${this.savedHighScore}`);
+        localStorage.setItem('highScore', `${this.highScore}`);
+
+        localStorage.setItem('savedHighestMultiplier', `${this.savedHighestMultiplier}`);
+        localStorage.setItem('highestMultiplier', `${this.highestMultiplier}`);
+
+        localStorage.setItem('savedBestSpeed', `${this.savedBestSpeed}`);
+        localStorage.setItem('bestSpeed', `${this.bestSpeed}`);
+
+        return true;
     }
 
     updateScore() {
@@ -347,7 +431,6 @@ class Play extends Phaser.Scene {
             this.tolerance += 3;
             this.moveSpeed += 25;
             this.music.rate += 0.001; 
-            console.log(this.itemSpeed)
         } else {
             this.maxSpeed = true;
             this.speedTextConfig.color = '#ff5f79'
@@ -423,12 +506,13 @@ class Play extends Phaser.Scene {
             }
 
             // * colors :3
-            if(this.hasStar == true) {
-
+            if(this.hasStar == true) {  
                 let top = this.hsv[this.i].color;
                 let bottom = this.hsv[359 - this.i].color;
                 
                 this.kart.setTint(top, bottom, top, bottom);
+
+                this.multiplierText.setTint(top, bottom, top, bottom);
         
                 this.i++;
         
@@ -439,13 +523,17 @@ class Play extends Phaser.Scene {
 
                 // * ends star invincibility
                 if (this.starDuration == 0) {
+                    this.multiplier -= this.bonusMultiplier;
+                    this.bonusMultiplier = 0;
+                    this.multiplierText.text = `x${this.multiplier}`
+                    this.multiplierText.setColor('#222034');
+                    this.multiplierText.clearTint();
                     this.kart.clearTint();
                     this.starTimer.remove();
                     this.kart.invincible = false;
                     this.hasStar = false;
                     this.starMusic.stop();
                     this.music.resume();
-                    console.log('star ended');
                 }
             }
 
@@ -477,6 +565,19 @@ class Play extends Phaser.Scene {
                     duration: 2500
                 })
 
+                // * check if high score
+                if(this.score > this.highScore) {
+                    this.isHighScore = true;
+
+                    this.highScore = this.score;
+                    this.highestMultiplier = this.multiplier;
+                    this.bestSpeed = this.itemSpeed;
+                    this.highScoreUI.text = `${this.highScore}`;
+                    this.highestMultiplierUI.text = `x${this.highestMultiplier}`;
+                    this.bestSpeedUI.text = `${this.bestSpeed}`;
+                    this.saveHighScore();
+                }
+
                 // * go to GameOver Scene
                 this.time.delayedCall(2500, () => {
                     this.cameras.main.fadeOut(1000, 0, 0, 0)
@@ -484,7 +585,11 @@ class Play extends Phaser.Scene {
                         this.scene.start('gameOverScene', {
                             score: this.score,
                             multiplier: this.multiplier,
-                            speed: this.itemSpeed
+                            speed: this.itemSpeed,
+                            isHighScore: this.isHighScore,
+                            highScore: this.highScore,
+                            highestMultiplier: this.highestMultiplier,
+                            bestSpeed: this.bestSpeed
                         });
                     })
                 })
@@ -515,7 +620,6 @@ class Play extends Phaser.Scene {
             this.kart.health += 1;
             this.sound.play('heal', {volume: 0.25})
             let lastHeart = this.hearts.getLast(true);
-            console.log(lastHeart.y)
             this.hearts.createFromConfig({
                 key: 'heart',
                 setOrigin: {
@@ -544,7 +648,6 @@ class Play extends Phaser.Scene {
                 })
                 
                 this.time.delayedCall(2000, () => {
-                    console.log('called')
                     this.maxHealthUI.destroy();
                     this.maxHealthFlashingText.destroy();
                 })
@@ -568,9 +671,7 @@ class Play extends Phaser.Scene {
     starCollision(kart, star) {
         star.destroy();
         this.hasStar = true;
-        console.log(`start of func: ${this.starDuration} ${this.kart.invincible}`);
         if (this.starDuration == 0) {
-            console.log('entered')
             this.music.pause();
             this.starMusic.play();
             this.starTimer = this.time.addEvent({
@@ -581,11 +682,13 @@ class Play extends Phaser.Scene {
         }
         this.starDuration += 20;
         this.kart.invincible = true;
-        console.log(`end of func: ${this.starDuration} ${this.kart.invincible}`);
+        this.bonusMultiplier += 10;
+        this.multiplier += 10;
+        this.multiplierText.setColor('#fff');
+        this.multiplierText.text = `x${this.multiplier}`
     }
 
     bombCollision(kart, bomb) {
-        console.log(this.kart.invincible)
         if(!this.kart.invincible && this.hasStar == false) {
             bomb.destroy();
             this.hearts.clear(true, true)
@@ -600,7 +703,6 @@ class Play extends Phaser.Scene {
     }
 
     bananaCollision(kart, banana) {
-        console.log("called bananaCollision()")
         // destory the banana
         banana.destroy();
 
@@ -628,7 +730,6 @@ class Play extends Phaser.Scene {
                     loop: 3,
                     yoyo: true,
                     onComplete: () => { 
-                            console.log('complete')
                             this.kart.invincible = false; 
                     }
                 })
@@ -638,6 +739,5 @@ class Play extends Phaser.Scene {
         } else {
             this.sound.play('hit', {volume: 0.25});
         }
-        console.log(this.kart.health)
     }
 }

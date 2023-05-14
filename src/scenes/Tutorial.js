@@ -93,9 +93,6 @@ class Tutorial extends Phaser.Scene {
        this.lane2 = new Phaser.Math.Vector2(this.x_of_lane2, this.kart_y);
        this.lanes = [this.lane0, this.lane1, this.lane2];
        this.currentLane = 1;
-       
-       console.log(this.lanes);
-       console.log(this.lanes[1].x);
 
        // * kart * //
        
@@ -351,7 +348,6 @@ class Tutorial extends Phaser.Scene {
            this.tolerance += 3;
            this.moveSpeed += 25;
            this.music.rate += 0.001; 
-           console.log(this.itemSpeed)
        } else {
            this.speedTextConfig.color = '#ff5f79'
            this.speedText.text = `MAX`;
@@ -394,7 +390,6 @@ class Tutorial extends Phaser.Scene {
 
            const distance = Phaser.Math.Distance.BetweenPoints(this.kart, this.lanes[this.currentLane]);
 
-           console.log("called update()")
            if(this.kart.destroyed == false) {
                if (this.kart.body.speed > 0) {
 
@@ -447,7 +442,6 @@ class Tutorial extends Phaser.Scene {
                    this.hasStar = false;
                    this.starMusic.stop();
                    this.music.resume();
-                   console.log('star ended');
                }
            }
 
@@ -524,7 +518,6 @@ class Tutorial extends Phaser.Scene {
            this.kart.health += 1;
            this.sound.play('heal', {volume: 0.25})
            let lastHeart = this.hearts.getLast(true);
-           console.log(lastHeart.y)
            this.hearts.createFromConfig({
                key: 'heart',
                setOrigin: {
@@ -553,7 +546,6 @@ class Tutorial extends Phaser.Scene {
                })
                
                this.time.delayedCall(2000, () => {
-                   console.log('called')
                    this.maxHealthUI.destroy();
                    this.maxHealthFlashingText.destroy();
                })
@@ -570,9 +562,7 @@ class Tutorial extends Phaser.Scene {
    starCollision(kart, star) {
        star.destroy();
        this.hasStar = true;
-       console.log(`start of func: ${this.starDuration} ${this.kart.invincible}`);
        if (this.starDuration == 0) {
-           console.log('entered')
            this.music.pause();
            this.starMusic.play();
            this.starTimer = this.time.addEvent({
@@ -583,11 +573,9 @@ class Tutorial extends Phaser.Scene {
        }
        this.starDuration = 20;
        this.kart.invincible = true;
-       console.log(`end of func: ${this.starDuration} ${this.kart.invincible}`);
    }
 
    bombCollision(kart, bomb) {
-        console.log(this.kart.invincible)
         if(!this.kart.invincible && this.hasStar == false) {
             bomb.destroy();
             this.hearts.clear(true, true)
@@ -602,7 +590,6 @@ class Tutorial extends Phaser.Scene {
    }
 
    bananaCollision(kart, banana) {
-       console.log("called bananaCollision()")
        // destory the banana
        banana.destroy();
 
@@ -632,7 +619,6 @@ class Tutorial extends Phaser.Scene {
                loop: 3,
                yoyo: true,
                onComplete: () => { 
-                       console.log('complete')
                        this.kart.invincible = false; 
                }
            })
@@ -640,6 +626,5 @@ class Tutorial extends Phaser.Scene {
        } else {
            this.sound.play('hit', {volume: 0.25});
        }
-       console.log(this.kart.health)
    }
 }
