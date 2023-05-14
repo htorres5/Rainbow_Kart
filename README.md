@@ -12,12 +12,15 @@ Ok but for real, I'm really just proud of the whole game itself. This the first 
 ### Credits:
 
 Visual Art -> Me
+
 Music -> 
 https://peritune.com/blog/2022/12/08/snowchill/
 https://peritune.com/blog/2022/06/05/unknown_cities/
 https://peritune.com/blog/2021/04/13/battle_fun/
 
+
 SFX -> 
+
 Me
 https://pixabay.com/sound-effects/explosion-01-6225/
 https://freesound.org/people/LittleRobotSoundFactory/packs/16681/
