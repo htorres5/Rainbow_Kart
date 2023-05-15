@@ -356,7 +356,7 @@ class Play extends Phaser.Scene {
             item.anims.play('fuse');
             this.obstacleGroup.add(item);
         } else if((probability == 69) && this.itemSpeed >= 600) {
-            if((this.multiplier >= 40) && this.itemSpeed >= 1200) {
+            if((this.multiplier >= 40) && this.itemSpeed >= 2000) {
                 let probability = Phaser.Math.Between(0,100);
                 if(probability == 69) {
                     item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'star');
@@ -374,7 +374,7 @@ class Play extends Phaser.Scene {
         } else {
             if(this.itemSpeed >= 1200) {
                 let chance = Phaser.Math.Between(0,2);
-                if(chance == 0 || this.multiplier >= 60) {
+                if(chance == 0 || this.multiplier >= 50) {
                     item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'bomb');
                     item.setScale(2);
                     item.body.setSize(8,8,true)
@@ -430,7 +430,7 @@ class Play extends Phaser.Scene {
         })
 
         if(this.scrollSpeed <= this.maxScrollSpeed) {
-            this.scrollSpeed += .5
+            this.scrollSpeed += 1
             this.itemSpeed = 60 * this.scrollSpeed;
             this.speedText.text = `${this.itemSpeed}`;
 
