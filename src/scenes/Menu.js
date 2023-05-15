@@ -52,6 +52,31 @@ class Menu extends Phaser.Scene {
             duration: 2000,
         })
 
+        // * CURRENT HIGH SCORE * //
+
+        this.scoreTextConfig = {
+            fontFamily: 'Pixel_NES',
+            fontSize: '30px',
+            fill: '#fff',
+            align: 'center'
+        }
+
+        this.statsTextConfig = {
+            fontFamily: 'Pixel_NES',
+            fontSize: '16px',
+            color: '#fff',
+            align: 'center'
+        }
+
+        // gets high score from local storage or sets it to 0 if it doesnt exist
+        this.savedHighScore = (localStorage.getItem('savedHighScore') == "true");
+        this.highScore = (!this.savedHighScore) ? 0 : parseInt(localStorage.getItem('highScore'));
+
+        if(this.savedHighScore) {
+            this.highScoreTitle = this.add.text(centerX, centerY - borderUISize*3, 'Current High Score', this.statsTextConfig).setOrigin(0.5).setAlpha(0);
+            this.highScoreUI = this.add.text(centerX, centerY, this.highScore.toLocaleString("en-US"), this.scoreTextConfig).setOrigin(0.5).setAlpha(0);
+        }
+
         // * KEYS* //
 
         this.keyPressed = false;
@@ -74,7 +99,7 @@ class Menu extends Phaser.Scene {
         this.time.delayedCall(1000, () => {
             // fade in title
             this.tweens.add({
-                targets: [this.startText, this.startKey],
+                targets: [this.highScoreTitle, this.highScoreUI,this.startText, this.startKey],
                 alpha: 1,
                 duration: 2000,
             })
@@ -102,6 +127,10 @@ class Menu extends Phaser.Scene {
         const top = this.hsv[this.i].color;
         const bottom = this.hsv[359 - this.i].color;
         this.text2.setTint(top, bottom, top, bottom);
+        if(this.savedHighScore) {
+            this.highScoreUI.setTint(top, bottom, top, bottom);
+        }
+
 
         this.i++;
 

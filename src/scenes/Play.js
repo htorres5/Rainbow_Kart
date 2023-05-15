@@ -50,6 +50,8 @@ class Play extends Phaser.Scene {
         // fade in scene
         this.cameras.main.fadeIn(1000, 0, 0, 0)
 
+        this.physics.world.setFPS(60);
+        
         // * BG * //
 
         this.starfield = this.add.tileSprite(borderUISize, 0, 480, 854, 'starfield').setOrigin(0, 0);
@@ -212,7 +214,7 @@ class Play extends Phaser.Scene {
             this.highestMultiplierText = '';
         }
         else { 
-            this.highScoreText = `${this.highScore}`;
+            this.highScoreText = this.highScore.toLocaleString("en-US");
             this.highestMultiplierText = `x${this.highestMultiplier}`;
         }
 
@@ -413,7 +415,7 @@ class Play extends Phaser.Scene {
 
     updateScore() {
         this.score += 50 * this.multiplier;
-        this.scoreText.text = `${this.score}`;
+        this.scoreText.text = this.score.toLocaleString("en-US");
     }
 
     speedup() {

@@ -60,11 +60,11 @@ class GameOver extends Phaser.Scene {
 
             this.spaceText = 'Press Space\nTo Start'
         } else {
-            this.finalScoreText = `${this.finalScore}`
+            this.finalScoreText = this.finalScore.toLocaleString("en-US");
             this.finalMultiplierText = `x${this.finalMultiplier}`
             this.finalSpeedText = `${this.finalSpeed}`
 
-            this.highScoreText = `${this.highScore}`
+            this.highScoreText = this.highScore.toLocaleString("en-US");
             this.highestMultiplierText = `Best\nx${this.highestMultiplier}`
             this.bestSpeedText = `Best\n${this.bestSpeed}`
 
