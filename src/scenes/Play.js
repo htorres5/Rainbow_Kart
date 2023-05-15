@@ -51,7 +51,7 @@ class Play extends Phaser.Scene {
         this.cameras.main.fadeIn(1000, 0, 0, 0)
 
         this.physics.world.setFPS(60);
-        
+
         // * BG * //
 
         this.starfield = this.add.tileSprite(borderUISize, 0, 480, 854, 'starfield').setOrigin(0, 0);
@@ -130,6 +130,9 @@ class Play extends Phaser.Scene {
         // keys
         keyLEFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         keyRIGHT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+        keySPACE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        keyESC = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+
 
         // * UI * //
 
@@ -492,6 +495,28 @@ class Play extends Phaser.Scene {
                         this.isMoving = false;
                     }
                 }
+            }
+
+            //console.log(Phaser.Input.Keyboard.JustDown(keySPACE))
+            if(Phaser.Input.Keyboard.JustDown(keyESC) || Phaser.Input.Keyboard.JustDown(keySPACE)) {
+                if(this.music.isPlaying) {
+                    this.music.setVolume(0.05)
+                    this.scene.pause("playScene")
+                    this.scene.launch("pauseScene", {music: this.music})
+                    this.time.delayedCall(50,() => {
+                        this.music.setVolume(0.25)
+                    })
+                } else {
+                    this.starMusic.setVolume(0.05)
+                    this.scene.pause("playScene")
+                    this.scene.launch("pauseScene", {music: this.starMusic})
+                    this.time.delayedCall(50,() => {
+                        this.starMusic.setVolume(0.25)
+                    })
+                }
+                
+                
+
             }
 
             // * Change UI if High Score
