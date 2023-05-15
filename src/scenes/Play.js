@@ -374,13 +374,12 @@ class Play extends Phaser.Scene {
         } else {
             if(this.itemSpeed >= 1200) {
                 let chance = Phaser.Math.Between(0,2);
-                if(chance == 0 || this.multiplier >= 50) {
+                if(chance == 0 || this.multiplier >= 60) {
                     item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'bomb');
                     item.setScale(2);
                     item.body.setSize(8,8,true)
                     item.anims.play('fuse');
                     this.obstacleGroup.add(item);
-
                 } else {
                     item = new Obstacle(this, this.itemSpeed, this.lanes[lane].x, 'banana');
                     this.bananaGroup.add(item);
