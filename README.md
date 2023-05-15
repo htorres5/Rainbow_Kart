@@ -3,7 +3,7 @@
 ### Created by: Hector Torres
 ### ~30 Hours
 
-## TURN ON HARDWARE ACCELERATION
+### TURN ON HARDWARE ACCELERATION
 
 ### Creative Tilt:
 
