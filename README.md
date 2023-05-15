@@ -3,6 +3,8 @@
 ### Created by: Hector Torres
 ### ~30 Hours
 
+## TURN ON HARDWARE ACCELERATION
+
 ### Creative Tilt:
 
 Mario Kart, Subway Surfers, and Rainbows. Rainbows Everywhere. After I saw the Rainbow Text effect on Phaser Labs/Examples, I went ham. RGB Forever 💯
