@@ -14,7 +14,11 @@ let config = {
           debug: false,
           gravity: { y: 0 }
         }
-      }
+      },
+    fps: {
+        target: 60,
+        forceSetTimeOut: true
+    },
 }
 
 let game = new Phaser.Game(config);
